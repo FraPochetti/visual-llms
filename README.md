@@ -1,6 +1,6 @@
 # Visual Neurons
 
-An image-first creative app powered by **Nano Banana** (`gemini-2.5-flash-image`). Create and edit images through natural language chat.
+An image-first creative app with **dual AI model support**: **Imagen 4** for high-fidelity generation and **Nano Banana** for creative editing. Create and edit images through natural language chat.
 
 **Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Gemini API
 
@@ -8,9 +8,9 @@ An image-first creative app powered by **Nano Banana** (`gemini-2.5-flash-image`
 
 ---
 
-## 🎉 What Was Built Today
+## 🎉 What's in This App
 
-This app was built from scratch in one session with full Gemini integration:
+A complete image generation and editing platform with dual AI model support:
 
 **✅ Core Infrastructure:**
 - Complete Next.js 15 setup with App Router
@@ -228,9 +228,10 @@ visual-llms/
 - Verify key at https://aistudio.google.com/app/apikey
 
 ### "Image generation not available"
-- Text-to-image may be in limited preview
-- Try **image editing** instead (upload + instruction)
-- Image editing is Nano Banana's core strength
+- Imagen 4 is the default and should work out of the box
+- If you get errors, verify your API key is valid
+- Try switching to Nano Banana model if Imagen 4 has issues
+- Image editing always uses Nano Banana (works reliably)
 
 ### Server won't start
 ```bash
