@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:/var/visualneurons/db.sqlite"
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  lastSeen   DateTime @updatedAt
+  
+  // Relations
+  mediaAssets MediaAsset[]
+  actions     Action[]
+
+  @@map("sessions")
+}
+
+model MediaAsset {
+  id        String   @id @default(uuid())
+  owner     String   // session ID
+  kind      String   @default("image")
+  provider  String   @default("local-fs")
+  path      String
+  bytes     Int?
+  width     Int?
+  height    Int?
+  metadata  String?  // JSON string
+  saved     Boolean  @default(false) // Only show in gallery if true
+  createdAt DateTime @default(now())
+  
+  // Relations
+  session   Session  @relation(fields: [owner], references: [id])
+  actions   Action[]
+
+  @@map("media_assets")
+}
+
+model Action {
+  id        String   @id @default(uuid())
+  userId    String   // session ID
+  action    String   // 'create' | 'edit' | 'upload'
+  assetId   String?
+  detail    String?  // JSON string with additional info
+  createdAt DateTime @default(now())
+  
+  // Relations
+  session   Session     @relation(fields: [userId], references: [id])
+  asset     MediaAsset? @relation(fields: [assetId], references: [id])
+
+  @@map("actions")
+}
+
