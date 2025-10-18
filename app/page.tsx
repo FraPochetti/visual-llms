@@ -191,7 +191,7 @@ export default function ChatPage() {
                                 Visual Neurons
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                LLM based image fun
+                                LLM-based image fun!
                             </p>
                         </div>
                         <div className="flex items-center space-x-3">

@@ -75,7 +75,9 @@ A complete image generation and editing platform with dual AI model support:
   - Time periods: Today, This Week, This Month, All Time
   - Breakdown by model with estimated costs
   - Based on official Google pricing
-- Python test script for standalone Imagen 4 testing
+- Python test scripts for standalone API testing
+  - **Imagen 4 test** (`test_imagen4.py`) - Generate images with Imagen 4
+  - **Veo 3.1 test** (`test_veo3.py`) - Generate videos with Veo 3.1 (with native audio)
 - Added `@google/genai` package for Imagen 4 API support
 
 **Model Quick Comparison:**
@@ -411,10 +413,56 @@ npx prisma studio
 
 ---
 
+## 🧪 Python Test Scripts
+
+Standalone Python scripts in `python_stuff/` for testing Gemini API models:
+
+### Test Imagen 4 (Image Generation)
+
+```bash
+cd python_stuff
+pip install -r requirements-python.txt
+python test_imagen4.py
+```
+
+- Generates 4 images with Imagen 4
+- Saves to `output_images/` directory
+- Tests: Text-to-image generation, aspect ratios, batch generation
+
+### Test Veo 3.1 (Video Generation)
+
+```bash
+cd python_stuff
+pip install -r requirements-python.txt
+python test_veo3.py
+```
+
+- Generates an 8-second video with Veo 3.1
+- **Includes natively generated audio!**
+- Saves to `output_videos/` directory
+- Resolution: 720p or 1080p
+- Processing time: 11 seconds to 6 minutes (depending on server load)
+
+**Requirements:**
+- Same `.env` file with `GEMINI_API_KEY`
+- Python 3.8+
+- Dependencies: `google-genai`, `python-dotenv`
+
+**Model Information:**
+- **Imagen 4 Ultra:** High-fidelity image generation, 2K resolution
+- **Veo 3.1:** State-of-the-art video generation with realistic audio
+  - Text-to-video, image-to-video, video-to-video
+  - Video extension capabilities
+  - SynthID watermarking for AI verification
+  - Read more: [Veo 3.1 Documentation](https://ai.google.dev/gemini-api/docs/video)
+
+---
+
 ## 📚 Resources
 
 - **Gemini API Docs:** https://ai.google.dev/docs
 - **Google AI Studio:** https://aistudio.google.com/
+- **Veo 3.1 Documentation:** https://ai.google.dev/gemini-api/docs/video
 - **Nano Banana:** https://blog.google/products/gemini/updated-image-editing-model/
 - **Next.js Docs:** https://nextjs.org/docs
 - **Prisma Docs:** https://www.prisma.io/docs
