@@ -72,12 +72,20 @@ export default function GalleryPage() {
                             Your saved creations
                         </p>
                     </div>
-                    <Link
-                        href="/"
-                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                        ← Back to Chat
-                    </Link>
+                    <div className="flex items-center space-x-3">
+                        <Link
+                            href="/usage"
+                            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+                        >
+                            Usage
+                        </Link>
+                        <Link
+                            href="/"
+                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        >
+                            ← Back to Chat
+                        </Link>
+                    </div>
                 </div>
             </header>
 
@@ -110,7 +118,7 @@ export default function GalleryPage() {
                                         alt="Gallery item"
                                         className="w-full h-full object-cover"
                                     />
-                                    {asset.provider === 'gemini-nano-banana' && (
+                                    {(asset.provider === 'gemini-nano-banana' || asset.provider === 'google-imagen4') && (
                                         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
                                             ✨ AI
                                         </div>

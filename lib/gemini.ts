@@ -52,8 +52,8 @@ export async function generateImage(prompt: string): Promise<{
 }
 
 /**
- * Generate an image from a text prompt using Imagen 4
- * Google's high-fidelity image generation model
+ * Generate an image from a text prompt using Imagen 4 Ultra
+ * Google's highest-fidelity image generation model
  */
 export async function generateImageWithImagen4(prompt: string): Promise<{
     imageData: string;
@@ -61,11 +61,12 @@ export async function generateImageWithImagen4(prompt: string): Promise<{
 }> {
     try {
         const response = await imagenClient.models.generateImages({
-            model: 'imagen-4.0-generate-001',
+            model: 'imagen-4.0-ultra-generate-001',
             prompt,
             config: {
                 numberOfImages: 1,
                 aspectRatio: "1:1",
+                imageSize: "2K",
                 personGeneration: PersonGeneration.ALLOW_ADULT
             }
         });

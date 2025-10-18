@@ -191,15 +191,23 @@ export default function ChatPage() {
                                 Visual Neurons
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Powered by Nano Banana 🍌 (Gemini 2.5 Flash Image)
+                                LLM based image fun
                             </p>
                         </div>
-                        <Link
-                            href="/gallery"
-                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        >
-                            Gallery
-                        </Link>
+                        <div className="flex items-center space-x-3">
+                            <Link
+                                href="/usage"
+                                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+                            >
+                                Usage
+                            </Link>
+                            <Link
+                                href="/gallery"
+                                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            >
+                                Gallery
+                            </Link>
+                        </div>
                     </div>
                 </header>
 
@@ -236,8 +244,8 @@ export default function ChatPage() {
                                                 src={message.imageUrl}
                                                 alt="Generated"
                                                 className={`rounded-lg max-w-md cursor-pointer hover:opacity-90 transition ${selectedImage === message.imageId
-                                                        ? 'ring-4 ring-blue-500'
-                                                        : ''
+                                                    ? 'ring-4 ring-blue-500'
+                                                    : ''
                                                     }`}
                                                 onClick={() => window.open(message.imageUrl, '_blank')}
                                                 title="Click to view full size"
@@ -255,8 +263,8 @@ export default function ChatPage() {
                                                                 setMode('edit');
                                                             }}
                                                             className={`text-xs px-2 py-1 rounded transition ${selectedImage === message.imageId
-                                                                    ? 'bg-green-600 text-white'
-                                                                    : 'bg-blue-600/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600/30'
+                                                                ? 'bg-green-600 text-white'
+                                                                : 'bg-blue-600/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600/30'
                                                                 }`}
                                                             title="Select this image for editing"
                                                         >

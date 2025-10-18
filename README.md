@@ -23,7 +23,7 @@ A complete image generation and editing platform with dual AI model support:
 - Official `@google/generative-ai` SDK for Nano Banana
 - Official `@google/genai` SDK for Imagen 4
 - **Dual model support:**
-  - **Imagen 4** (`imagen-4.0-generate-001`) - High-fidelity image generation (default)
+  - **Imagen 4 Ultra** (`imagen-4.0-ultra-generate-001`) - Highest-fidelity image generation (default)
   - **Nano Banana** (`gemini-2.5-flash-image`) - Alternative generation + editing
 - Text-to-image generation with model selection
 - Image editing with instruction prompts (Nano Banana only)
@@ -60,6 +60,7 @@ A complete image generation and editing platform with dual AI model support:
 - Image editing using wrong (first) image instead of latest
 - Duplicate images when loading from gallery
 - AI badges on user-uploaded images
+- AI badge not showing on Imagen 4 generated images
 
 **🆕 Recent Additions (Oct 18, 2025):**
 - **Imagen 4 integration** - Dual model support for image generation
@@ -70,12 +71,16 @@ A complete image generation and editing platform with dual AI model support:
   - Blue ring highlight shows selected image
   - Automatically switches to Edit mode
   - Perfect for comparing models then editing your preferred result
+- **Usage & Costs Dashboard** - Track API spending and operations
+  - Time periods: Today, This Week, This Month, All Time
+  - Breakdown by model with estimated costs
+  - Based on official Google pricing
 - Python test script for standalone Imagen 4 testing
 - Added `@google/genai` package for Imagen 4 API support
 
 **Model Quick Comparison:**
-- **Imagen 4**: ⭐⭐⭐⭐⭐ generation, ❌ editing, best for photorealistic images
-- **Nano Banana**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, best for creative variations
+- **Imagen 4 Ultra**: ⭐⭐⭐⭐⭐ generation, ❌ editing, 2K resolution (2048×2048), highest-quality photorealistic images ($0.06/image)
+- **Gemini 2.5 Flash Image**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, 1024×1024 default, best for creative variations (≈$0.039/image)
 
 ---
 
@@ -118,7 +123,7 @@ npm run dev
 ### Create Images
 1. Select **"Create"** mode
 2. **Choose your model:**
-   - **Imagen 4 (Standard)** - Default, high-quality photorealistic generation
+   - **Imagen 4 (Standard)** - Default, highest-quality photorealistic generation (Ultra tier)
    - **Nano Banana (Gemini)** - Alternative multimodal model
 3. Type a prompt: *"A serene mountain landscape at sunset"*
 4. Click **Send**
@@ -163,6 +168,22 @@ npm run dev
   - **Open Full Size** - View image in new tab
   - **⬇️ Download Image** - Save to your computer
   - **🗑️ Delete Image** - Permanently remove (with confirmation)
+
+### Usage & Costs
+- Click **Usage** to track your API spending
+- **Dashboard shows:**
+  - **Today** - Current day's operations and costs
+  - **This Week** - Monday to now
+  - **This Month** - 1st to now
+  - **All Time** - Total usage since you started
+- **Breakdown by model:**
+  - Imagen 4 operations and cost
+  - Gemini 2.5 Flash Image operations and cost
+  - Total operations and estimated cost in USD
+- **Official pricing used:**
+  - Imagen 4 Ultra: $0.06 per image (highest quality tier)
+  - Gemini 2.5 Flash Image: ≈$0.039 per image
+- Costs are estimates; see [official pricing](https://ai.google.dev/gemini-api/docs/pricing) for details
 
 ### Save Button Behavior
 - After generating or editing, click **"Save"** to keep the image
@@ -273,6 +294,7 @@ npx prisma studio
 - ✅ **Select any image for editing** from chat history
 - ✅ Iterative editing (chain multiple edits)
 - ✅ **Undo edits** (revert to previous version)
+- ✅ **Usage & Costs Dashboard** with API spending tracking
 - ✅ Gallery with grid view and detail modal
 - ✅ Save button (explicit save, no auto-save)
 - ✅ Download images to your computer
@@ -300,11 +322,13 @@ npx prisma studio
 
 ### Choosing the Right Model
 
-**Imagen 4 (Default for Creation):**
-- Best for: High-quality photorealistic images
-- Strengths: Detailed textures, realistic lighting, professional quality
-- Use when: You want the highest fidelity image generation
+**Imagen 4 Ultra (Default for Creation):**
+- Best for: Highest-quality photorealistic images
+- Strengths: Superior detail, realistic lighting, professional quality
+- Resolution: 2K (2048×2048 pixels)
+- Use when: You want the absolute best image generation quality
 - Speed: Fast generation (~5-10 seconds)
+- Cost: $0.06 per image (Ultra tier - same price for 1K or 2K!)
 
 **Nano Banana (Alternative for Creation + Only Option for Editing):**
 - Best for: Creative variations and image editing
@@ -314,11 +338,11 @@ npx prisma studio
 
 ### Writing Good Prompts
 
-**For Image Generation (Imagen 4 or Nano Banana):**
+**For Image Generation (Imagen 4 Ultra or Nano Banana):**
 - Be specific: *"A photorealistic portrait of a cat with blue eyes, studio lighting, bokeh background"*
 - Include style: *"in the style of Van Gogh"* or *"minimalist modern design"*
 - Specify details: lighting, mood, composition, colors
-- Imagen 4 excels at: Architecture, landscapes, portraits, product photography
+- Imagen 4 Ultra excels at: Architecture, landscapes, portraits, product photography with superior detail
 
 **For Image Editing (Nano Banana only):**
 - Be clear and direct: *"Change the shirt color to red"*

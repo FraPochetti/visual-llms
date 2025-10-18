@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
                 const result = await generateImageWithImagen4(prompt);
                 imageData = result.imageData;
                 mimeType = result.mimeType;
-                modelName = 'imagen-4.0-generate-001';
+                modelName = 'imagen-4.0-ultra-generate-001';
                 provider = 'google-imagen4';
             } else {
                 const result = await generateImage(prompt);
