@@ -66,6 +66,10 @@ This app was built from scratch in one session with full Gemini integration:
 - Model selection UI with radio buttons (Create mode only)  
 - Imagen 4 set as default for new image generation
 - Nano Banana remains exclusive for image editing
+- **Select any image for editing** - "Edit This" button on every image in chat
+  - Blue ring highlight shows selected image
+  - Automatically switches to Edit mode
+  - Perfect for comparing models then editing your preferred result
 - Python test script for standalone Imagen 4 testing
 - Added `@google/genai` package for Imagen 4 API support
 
@@ -138,6 +142,11 @@ npm run dev
 - **Click any image** in chat to view full size in new tab
 - Hover shows cursor change and slight opacity effect
 - Images from gallery appear inline in chat when sent
+- **Select any image for editing**: Click "Edit This" button on any image in chat
+  - Switches to Edit mode automatically
+  - Selected image gets blue ring highlight
+  - Button shows "✓ Selected" when that image is active
+  - Perfect for comparing models then editing your favorite
 - **Undo edits**: Click "← Previous" button on edited images to revert
   - Goes back to the version before the edit
   - Useful if you don't like the result
@@ -260,6 +269,7 @@ npx prisma studio
 - ✅ Model selection UI (radio buttons in Create mode)
 - ✅ Image generation from text prompts
 - ✅ Image editing with natural language instructions (Nano Banana)
+- ✅ **Select any image for editing** from chat history
 - ✅ Iterative editing (chain multiple edits)
 - ✅ **Undo edits** (revert to previous version)
 - ✅ Gallery with grid view and detail modal

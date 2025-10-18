@@ -235,7 +235,10 @@ export default function ChatPage() {
                                             <img
                                                 src={message.imageUrl}
                                                 alt="Generated"
-                                                className="rounded-lg max-w-md cursor-pointer hover:opacity-90 transition"
+                                                className={`rounded-lg max-w-md cursor-pointer hover:opacity-90 transition ${selectedImage === message.imageId
+                                                        ? 'ring-4 ring-blue-500'
+                                                        : ''
+                                                    }`}
                                                 onClick={() => window.open(message.imageUrl, '_blank')}
                                                 title="Click to view full size"
                                             />
@@ -244,6 +247,22 @@ export default function ChatPage() {
                                                     <span className="text-xs opacity-75">
                                                         ✨ AI-generated
                                                     </span>
+                                                    {message.imageId && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedImage(message.imageId!);
+                                                                setSelectedImageUrl(message.imageUrl!);
+                                                                setMode('edit');
+                                                            }}
+                                                            className={`text-xs px-2 py-1 rounded transition ${selectedImage === message.imageId
+                                                                    ? 'bg-green-600 text-white'
+                                                                    : 'bg-blue-600/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600/30'
+                                                                }`}
+                                                            title="Select this image for editing"
+                                                        >
+                                                            {selectedImage === message.imageId ? '✓ Selected' : 'Edit This'}
+                                                        </button>
+                                                    )}
                                                     {message.originalImageId && (
                                                         <button
                                                             onClick={async () => {
