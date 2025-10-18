@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { generateImage } from '@/lib/gemini';
+import { generateImage, generateImageWithImagen4 } from '@/lib/gemini';
 import { saveMediaFile } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
     try {
         const sessionId = await getOrCreateSession();
-        const { prompt } = await request.json();
+        const { prompt, model = 'imagen4' } = await request.json();
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
-        // Generate image using Gemini Nano Banana
+        // Choose generation function based on model
         let imageData: string;
         let mimeType: string;
+        let modelName: string;
+        let provider: string;
 
         try {
-            const result = await generateImage(prompt);
-            imageData = result.imageData;
-            mimeType = result.mimeType;
+            if (model === 'imagen4') {
+                const result = await generateImageWithImagen4(prompt);
+                imageData = result.imageData;
+                mimeType = result.mimeType;
+                modelName = 'imagen-4.0-generate-001';
+                provider = 'google-imagen4';
+            } else {
+                const result = await generateImage(prompt);
+                imageData = result.imageData;
+                mimeType = result.mimeType;
+                modelName = 'gemini-2.5-flash-image';
+                provider = 'gemini-nano-banana';
+            }
         } catch (geminiError: any) {
-            console.error('Gemini API error:', geminiError);
+            console.error('Image generation API error:', geminiError);
 
             // Provide helpful error message
             if (geminiError.message?.includes('API key')) {
@@ -34,10 +46,10 @@ export async function POST(request: NextRequest) {
 
             return NextResponse.json({
                 success: false,
-                error: 'Image generation is not yet available in the Gemini API.',
-                message: 'Nano Banana currently supports image editing. Text-to-image generation may require additional API access or is coming soon.',
+                error: 'Image generation failed.',
+                message: geminiError.message || 'An error occurred during image generation.',
                 prompt,
-            }, { status: 501 });
+            }, { status: 500 });
         }
 
         // Convert base64 to buffer
@@ -55,12 +67,12 @@ export async function POST(request: NextRequest) {
             data: {
                 owner: sessionId,
                 kind: 'image',
-                provider: 'gemini-nano-banana',
+                provider: provider,
                 path: relativePath,
                 bytes: imageBuffer.length,
                 metadata: JSON.stringify({
                     prompt,
-                    model: 'gemini-2.5-flash-image',
+                    model: modelName,
                     generatedAt: new Date().toISOString(),
                 }),
             },
@@ -76,9 +88,13 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        const successMessage = model === 'imagen4'
+            ? 'Image generated successfully with Imagen 4!'
+            : 'Image generated successfully with Nano Banana!';
+
         return NextResponse.json({
             success: true,
-            message: 'Image generated successfully with Nano Banana!',
+            message: successMessage,
             imageUrl: `/api/media/${relativePath}`,
             imageId: mediaAsset.id,
             asset: mediaAsset,

@@ -20,6 +20,7 @@ export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [mode, setMode] = useState<'create' | 'edit'>('create');
+    const [selectedModel, setSelectedModel] = useState<'imagen4' | 'nano-banana'>('imagen4');
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +83,7 @@ export default function ChatPage() {
                 response = await fetch('/api/images/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: input }),
+                    body: JSON.stringify({ prompt: input, model: selectedModel }),
                 });
             } else {
                 response = await fetch('/api/images/edit', {
@@ -364,6 +365,36 @@ export default function ChatPage() {
                             className="hidden"
                         />
                     </div>
+
+                    {/* Model selector - only visible in create mode */}
+                    {mode === 'create' && (
+                        <div className="flex gap-6 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="imagen4"
+                                    checked={selectedModel === 'imagen4'}
+                                    onChange={(e) => setSelectedModel(e.target.value as 'imagen4')}
+                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    Imagen 4 <span className="text-xs text-gray-500">(Standard)</span>
+                                </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="nano-banana"
+                                    checked={selectedModel === 'nano-banana'}
+                                    onChange={(e) => setSelectedModel(e.target.value as 'nano-banana')}
+                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    Nano Banana <span className="text-xs text-gray-500">(Gemini)</span>
+                                </span>
+                            </label>
+                        </div>
+                    )}
 
                     {/* Input form */}
                     <form onSubmit={handleSubmit} className="flex space-x-2">

@@ -20,10 +20,13 @@ This app was built from scratch in one session with full Gemini integration:
 - HTTP-only session cookies (no login required)
 
 **✅ Gemini Integration:**
-- Official `@google/generative-ai` SDK
-- Correct model: `gemini-2.5-flash-image` (Nano Banana)
-- Text-to-image generation
-- Image editing with instruction prompts
+- Official `@google/generative-ai` SDK for Nano Banana
+- Official `@google/genai` SDK for Imagen 4
+- **Dual model support:**
+  - **Imagen 4** (`imagen-4.0-generate-001`) - High-fidelity image generation (default)
+  - **Nano Banana** (`gemini-2.5-flash-image`) - Alternative generation + editing
+- Text-to-image generation with model selection
+- Image editing with instruction prompts (Nano Banana only)
 - Comprehensive error handling
 
 **✅ User Interface:**
@@ -57,6 +60,18 @@ This app was built from scratch in one session with full Gemini integration:
 - Image editing using wrong (first) image instead of latest
 - Duplicate images when loading from gallery
 - AI badges on user-uploaded images
+
+**🆕 Recent Additions (Oct 18, 2025):**
+- **Imagen 4 integration** - Dual model support for image generation
+- Model selection UI with radio buttons (Create mode only)  
+- Imagen 4 set as default for new image generation
+- Nano Banana remains exclusive for image editing
+- Python test script for standalone Imagen 4 testing
+- Added `@google/genai` package for Imagen 4 API support
+
+**Model Quick Comparison:**
+- **Imagen 4**: ⭐⭐⭐⭐⭐ generation, ❌ editing, best for photorealistic images
+- **Nano Banana**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, best for creative variations
 
 ---
 
@@ -98,10 +113,13 @@ npm run dev
 
 ### Create Images
 1. Select **"Create"** mode
-2. Type a prompt: *"A serene mountain landscape at sunset"*
-3. Click **Send**
-4. Wait for Nano Banana to generate the image
-5. **Click Save** to add to gallery *(images are not saved automatically!)*
+2. **Choose your model:**
+   - **Imagen 4 (Standard)** - Default, high-quality photorealistic generation
+   - **Nano Banana (Gemini)** - Alternative multimodal model
+3. Type a prompt: *"A serene mountain landscape at sunset"*
+4. Click **Send**
+5. Wait for the model to generate the image
+6. **Click Save** to add to gallery *(images are not saved automatically!)*
 
 ### Edit Images
 1. Select **"Edit selected"** mode
@@ -236,9 +254,12 @@ npx prisma studio
 
 **✅ Fully Implemented:**
 - ✅ Chat interface with create/edit modes
-- ✅ Gemini 2.5 Flash Image integration (Nano Banana)
+- ✅ **Dual model support:**
+  - ✅ Imagen 4 for high-fidelity image generation
+  - ✅ Gemini 2.5 Flash Image (Nano Banana) for generation + editing
+- ✅ Model selection UI (radio buttons in Create mode)
 - ✅ Image generation from text prompts
-- ✅ Image editing with natural language instructions
+- ✅ Image editing with natural language instructions (Nano Banana)
 - ✅ Iterative editing (chain multiple edits)
 - ✅ **Undo edits** (revert to previous version)
 - ✅ Gallery with grid view and detail modal
@@ -266,14 +287,29 @@ npx prisma studio
 
 ## 💡 Tips for Best Results
 
+### Choosing the Right Model
+
+**Imagen 4 (Default for Creation):**
+- Best for: High-quality photorealistic images
+- Strengths: Detailed textures, realistic lighting, professional quality
+- Use when: You want the highest fidelity image generation
+- Speed: Fast generation (~5-10 seconds)
+
+**Nano Banana (Alternative for Creation + Only Option for Editing):**
+- Best for: Creative variations and image editing
+- Strengths: Maintains subject likeness, follows instructions well
+- Use when: You want multimodal capabilities or need to edit images
+- Speed: Moderate generation
+
 ### Writing Good Prompts
 
-**For Image Generation:**
+**For Image Generation (Imagen 4 or Nano Banana):**
 - Be specific: *"A photorealistic portrait of a cat with blue eyes, studio lighting, bokeh background"*
 - Include style: *"in the style of Van Gogh"* or *"minimalist modern design"*
 - Specify details: lighting, mood, composition, colors
+- Imagen 4 excels at: Architecture, landscapes, portraits, product photography
 
-**For Image Editing:**
+**For Image Editing (Nano Banana only):**
 - Be clear and direct: *"Change the shirt color to red"*
 - One change at a time works best
 - Nano Banana excels at maintaining facial features and identity
@@ -402,7 +438,10 @@ npx prisma studio
 - `app/api/media/[...path]/route.ts` - Serve image files
 
 **Libraries:**
-- `lib/gemini.ts` - Gemini API client (154 lines)
+- `lib/gemini.ts` - Gemini API client with dual model support (190+ lines)
+  - Imagen 4 integration via `@google/genai`
+  - Nano Banana via `@google/generative-ai`
+  - Three export functions: `generateImageWithImagen4()`, `generateImage()`, `editImage()`
 - `lib/prisma.ts` - Database client singleton
 - `lib/session.ts` - Session management utilities
 - `lib/storage.ts` - File system operations
@@ -414,11 +453,13 @@ npx prisma studio
 
 **Configuration:**
 - `package.json` - Dependencies and scripts
+  - Added `@google/genai` for Imagen 4 support
+  - Existing `@google/generative-ai` for Nano Banana
 - `tsconfig.json` - TypeScript configuration
 - `tailwind.config.ts` - Tailwind setup
 - `next.config.ts` - Next.js config with serverActions
 - `.gitignore` - Git ignore rules
-- `.env.example` - Environment template
+- `.env` - Environment variables (GEMINI_API_KEY)
 
 ### Key Technical Decisions
 
@@ -448,6 +489,18 @@ npx prisma studio
 - Prevents gallery clutter from experiments
 - User has full control
 - Can iterate many times before committing
+
+**Why Dual Model Support (Imagen 4 + Nano Banana)?**
+- **Imagen 4** is specialized for high-fidelity text-to-image generation
+  - Superior photorealism and detail quality
+  - Faster generation times
+  - Industry-leading image generation model
+- **Nano Banana** excels at multimodal tasks
+  - Maintains subject likeness during edits
+  - Better for creative variations
+  - Unified model for both generation and editing
+- Gives users choice based on their specific needs
+- Imagen 4 as default ensures best first impression
 
 ### Database Schema
 
