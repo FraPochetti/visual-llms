@@ -35,3 +35,17 @@ export async function readMediaFile(relativePath: string): Promise<Buffer> {
     return fs.readFile(fullPath);
 }
 
+export async function saveVideo(
+    sessionId: string,
+    videoBuffer: Buffer
+): Promise<string> {
+    const timestamp = Date.now();
+    const filename = `video_${timestamp}.mp4`;
+    return saveMediaFile(sessionId, videoBuffer, filename);
+}
+
+export async function deleteMediaFile(relativePath: string): Promise<void> {
+    const fullPath = await getMediaFilePath(relativePath);
+    await fs.unlink(fullPath);
+}
+

@@ -7,6 +7,7 @@ import { formatCost } from '@/lib/pricing';
 type PeriodStats = {
     imagen4: number;
     nanoBanana: number;
+    veo31: number;
     total: number;
     cost: number;
 };
@@ -64,6 +65,12 @@ export default function UsagePage() {
                             <span className="text-gray-600 dark:text-gray-400">Gemini 2.5 Flash Image:</span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.nanoBanana} {period.nanoBanana === 1 ? 'op' : 'ops'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Veo 3.1:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {period.veo31} {period.veo31 === 1 ? 'video' : 'videos'}
                             </span>
                         </div>
                     </div>
@@ -149,6 +156,9 @@ export default function UsagePage() {
                                 </p>
                                 <p>
                                     <strong>Gemini 2.5 Flash Image Standard:</strong> ≈$0.039 per 1024×1024 image
+                                </p>
+                                <p>
+                                    <strong>Veo 3.1:</strong> $3.20 per 8-second video ($0.40/second, includes native audio)
                                 </p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
                                     Costs are estimates based on official Gemini API pricing. Actual costs may vary based on resolution, batch mode, and input tokens.

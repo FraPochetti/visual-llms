@@ -40,12 +40,21 @@ export async function GET(
         else if (ext === 'jpg' || ext === 'jpeg') contentType = 'image/jpeg';
         else if (ext === 'gif') contentType = 'image/gif';
         else if (ext === 'webp') contentType = 'image/webp';
+        else if (ext === 'mp4') contentType = 'video/mp4';
+        else if (ext === 'webm') contentType = 'video/webm';
+
+        const headers: Record<string, string> = {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=31536000',
+        };
+
+        // Add Accept-Ranges header for video streaming
+        if (contentType.startsWith('video/')) {
+            headers['Accept-Ranges'] = 'bytes';
+        }
 
         return new NextResponse(new Uint8Array(fileBuffer), {
-            headers: {
-                'Content-Type': contentType,
-                'Cache-Control': 'public, max-age=31536000',
-            },
+            headers,
         });
     } catch (error) {
         console.error('Error serving media file:', error);

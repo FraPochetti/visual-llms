@@ -15,6 +15,10 @@ export const API_PRICING = {
     GEMINI_FLASH_IMAGE_STANDARD: 0.039,  // Standard: ~$0.039 per image
     GEMINI_FLASH_IMAGE_BATCH: 0.0195,    // Batch: ~$0.0195 per image (half price)
 
+    // Veo 3.1 pricing (per second of video)
+    VEO_3_1_PER_SECOND: 0.40,  // $0.40 per second
+    VEO_3_1_PER_VIDEO: 3.20,   // 8 seconds * $0.40 = $3.20 per 8-second video
+
     // Input tokens (negligible for most prompts, not tracked separately)
     // GEMINI_INPUT_STANDARD: 0.30 per 1M tokens
     // GEMINI_INPUT_BATCH: 0.15 per 1M tokens
@@ -22,7 +26,7 @@ export const API_PRICING = {
 
 /**
  * Calculate estimated cost for API operations
- * Note: This assumes Imagen 4 Ultra and Gemini 2.5 Flash Image Standard pricing
+ * Note: This assumes Imagen 4 Ultra, Gemini 2.5 Flash Image Standard, and Veo 3.1 pricing
  */
 export function calculateCost(
     provider: string,
@@ -34,6 +38,9 @@ export function calculateCost(
     } else if (provider === 'gemini-nano-banana') {
         // Gemini 2.5 Flash Image Standard pricing
         return count * API_PRICING.GEMINI_FLASH_IMAGE_STANDARD;
+    } else if (provider === 'google-veo-3.1') {
+        // Veo 3.1: $3.20 per 8-second video
+        return count * API_PRICING.VEO_3_1_PER_VIDEO;
     }
     // local-fs uploads are free
     return 0;

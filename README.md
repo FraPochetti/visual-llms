@@ -1,16 +1,16 @@
 # Visual Neurons
 
-An image-first creative app with **dual AI model support**: **Imagen 4** for high-fidelity generation and **Nano Banana** for creative editing. Create and edit images through natural language chat.
+A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nano Banana** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
 
 **Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Gemini API
 
-**Status:** ✅ Fully functional and production-ready! All core features implemented and tested.
+**Status:** ✅ Fully functional and production-ready! All core features including video generation implemented and tested.
 
 ---
 
 ## 🎉 What's in This App
 
-A complete image generation and editing platform with dual AI model support:
+A complete image and video generation platform with multiple AI models:
 
 **✅ Core Infrastructure:**
 - Complete Next.js 15 setup with App Router
@@ -21,30 +21,36 @@ A complete image generation and editing platform with dual AI model support:
 
 **✅ Gemini Integration:**
 - Official `@google/generative-ai` SDK for Nano Banana
-- Official `@google/genai` SDK for Imagen 4
-- **Dual model support:**
+- Official `@google/genai` SDK for Imagen 4 & Veo 3.1
+- **Triple model support:**
   - **Imagen 4 Ultra** (`imagen-4.0-ultra-generate-001`) - Highest-fidelity image generation (default)
   - **Nano Banana** (`gemini-2.5-flash-image`) - Alternative generation + editing
+  - **Veo 3.1** (`veo-3.1-generate-preview`) - Cinematic video generation with native audio
 - Text-to-image generation with model selection
 - Image editing with instruction prompts (Nano Banana only)
+- **Video generation** with 2 modes:
+  - Text-to-video
+  - Image-to-video (single frame anchor)
 - Comprehensive error handling
 
 **✅ User Interface:**
 - Beautiful chat interface with dark mode support
-- Create/Edit mode toggle
-- Inline image display in chat (max 448px)
-- Click images to view full size
-- Image preview when editing
-- Loading states and animations
+- Create/Edit/Video mode toggle
+- Inline image and video display in chat
+- Click images to view full size, videos play with controls
+- Frame selection for video generation
+- Loading states with progress tracking (videos)
+- Animations and transitions
 
 **✅ Gallery System:**
-- Grid view of saved images
-- AI badge only on AI-generated images (not uploads)
-- Image detail modal with metadata
+- Grid view of saved images and videos
+- Media type filtering (All/Images/Videos)
+- AI badges and video indicators
+- Detail modal with metadata (duration, resolution, FPS for videos)
 - Send to Chat functionality
-- Download images to computer
-- Delete images with confirmation
-- Only shows explicitly saved images (no auto-save clutter)
+- Download media to computer
+- Delete media with confirmation
+- Only shows explicitly saved media (no auto-save clutter)
 
 **✅ Smart Features:**
 - **Iterative editing**: Each edit builds on the previous result
@@ -62,7 +68,15 @@ A complete image generation and editing platform with dual AI model support:
 - AI badges on user-uploaded images
 - AI badge not showing on Imagen 4 generated images
 
-**🆕 Recent Additions (Oct 18, 2025):**
+**🆕 Recent Additions (Oct 19, 2025):**
+- **Veo 3.1 Video Generation** - Full video creation with 2 modes
+  - Text-to-video: Generate 8-second videos from prompts
+  - Image-to-video: Use image as starting frame
+  - Native audio generation (automatic)
+  - 720p/1080p resolution at 24fps
+  - SynthID watermarking
+  - Progress tracking (11s-6min generation time)
+  - Frame selection from chat history
 - **Imagen 4 integration** - Dual model support for image generation
 - Model selection UI with radio buttons (Create mode only)  
 - Imagen 4 set as default for new image generation
@@ -78,11 +92,12 @@ A complete image generation and editing platform with dual AI model support:
 - Python test scripts for standalone API testing
   - **Imagen 4 test** (`test_imagen4.py`) - Generate images with Imagen 4
   - **Veo 3.1 test** (`test_veo3.py`) - Generate videos with Veo 3.1 (with native audio)
-- Added `@google/genai` package for Imagen 4 API support
+- Added `@google/genai` package for Imagen 4 & Veo 3.1 API support
 
 **Model Quick Comparison:**
 - **Imagen 4 Ultra**: ⭐⭐⭐⭐⭐ generation, ❌ editing, 2K resolution (2048×2048), highest-quality photorealistic images ($0.06/image)
 - **Gemini 2.5 Flash Image**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, 1024×1024 default, best for creative variations (≈$0.039/image)
+- **Veo 3.1**: ⭐⭐⭐⭐⭐ video generation, 8s videos, 720p/1080p, native audio, cinematic quality (pricing TBD)
 
 ---
 
@@ -144,6 +159,20 @@ npm run dev
    - *"Make it more vibrant"*
    - Each edit builds on the previous result
 
+### Generate Videos 🎬
+1. Select **"Video"** mode
+2. **Choose generation mode:**
+   - **Text Only** - Describe the video you want: *"A calico kitten playing in a sunny garden, camera panning slowly"*
+   - **Anchor with 1 Frame** - Click **"Use as Frame"** on any image, then describe the motion/action
+3. Type your video prompt describing the scene and motion
+4. Click **Send** and wait 11 seconds to 6 minutes (progress updates shown)
+5. **Generated video includes native audio!** (8s, 720p/1080p, 24fps, SynthID watermarked)
+6. Click **Save** to add to gallery
+
+**Example Prompts:**
+- *"A serene park in spring next to a lake during golden hour, camera panning across wildflowers"*
+- *"Drone shot flying over a misty forest at sunrise, revealing a hidden waterfall"*
+
 ### Image Interaction
 - **Chat images** are displayed at a comfortable size (max 448px wide)
 - **Click any image** in chat to view full size in new tab
@@ -160,16 +189,21 @@ npm run dev
   - Example: Dog → Tiger (don't like) → Click "← Previous" → Back to Dog!
 
 ### Gallery
-- Click **Gallery** to view **only saved images**
-- Generated/edited images **are NOT auto-saved** - you must click Save!
-- **AI-generated/edited images** show a ✨ AI badge
-- **User-uploaded images** have no badge (they're yours!)
-- Click any image for details and metadata
+- Click **Gallery** to view **only saved media** (images and videos)
+- **Filter by type:** All / Images / Videos
+- Generated media **is NOT auto-saved** - you must click Save!
+- **AI-generated content** shows badges:
+  - **✨ AI** for images (Imagen 4 / Nano Banana)
+  - **🎬 VIDEO** for Veo 3.1 videos
+- **User-uploaded images** have no badge
+- Click any item for details and metadata
+  - Images: dimensions, file size
+  - Videos: duration, resolution, FPS, audio
 - **Actions available:**
-  - **Send to Chat** - Load image into the editor for further edits
-  - **Open Full Size** - View image in new tab
-  - **⬇️ Download Image** - Save to your computer
-  - **🗑️ Delete Image** - Permanently remove (with confirmation)
+  - **Send to Chat** - Load media for editing or as video frame
+  - **Open Full Size** - View in new tab (or play video)
+  - **⬇️ Download** - Save to your computer
+  - **🗑️ Delete** - Permanently remove (with confirmation)
 
 ### Usage & Costs
 - Click **Usage** to track your API spending
@@ -286,26 +320,31 @@ npx prisma studio
 ## 🎨 Features
 
 **✅ Fully Implemented:**
-- ✅ Chat interface with create/edit modes
-- ✅ **Dual model support:**
+- ✅ Chat interface with create/edit/video modes
+- ✅ **Triple model support:**
   - ✅ Imagen 4 for high-fidelity image generation
   - ✅ Gemini 2.5 Flash Image (Nano Banana) for generation + editing
+  - ✅ Veo 3.1 for cinematic video generation with audio
 - ✅ Model selection UI (radio buttons in Create mode)
-- ✅ Image generation from text prompts
+- ✅ Image generation from text prompts (Imagen 4 or Nano Banana)
 - ✅ Image editing with natural language instructions (Nano Banana)
+- ✅ **Video generation** with Veo 3.1 (text-to-video or image-to-video)
+- ✅ Frame selection from chat history
+- ✅ Progress tracking for video generation
 - ✅ **Select any image for editing** from chat history
 - ✅ Iterative editing (chain multiple edits)
 - ✅ **Undo edits** (revert to previous version)
 - ✅ **Usage & Costs Dashboard** with API spending tracking
-- ✅ Gallery with grid view and detail modal
+- ✅ Gallery with grid view, media type filtering, and detail modal
+- ✅ Video playback with controls in chat and gallery
 - ✅ Save button (explicit save, no auto-save)
-- ✅ Download images to your computer
-- ✅ Delete images with confirmation
+- ✅ Download images and videos to your computer
+- ✅ Delete media with confirmation
 - ✅ Send to Chat from gallery
-- ✅ Click images to view full size
+- ✅ Click images to view full size, videos play inline
 - ✅ Session-based storage (cookie-based)
-- ✅ SQLite database + local file storage
-- ✅ Smart AI badges (only on AI-generated content)
+- ✅ SQLite database + local file storage (images & videos)
+- ✅ Smart AI badges and video indicators
 - ✅ Error handling and graceful degradation
 
 **🔮 Future Enhancements:**
@@ -338,6 +377,14 @@ npx prisma studio
 - Use when: You want multimodal capabilities or need to edit images
 - Speed: Moderate generation
 
+**Veo 3.1 (Video Generation):**
+- Best for: Cinematic videos with realistic motion and audio
+- Strengths: Natural physics, smooth camera movements, native audio synthesis
+- Resolution: 720p/1080p at 24fps, 8-second videos
+- Use when: You need short-form video content with professional quality
+- Speed: 11 seconds to 6 minutes (varies by complexity)
+- Features: Text-to-video, image-anchored, and frame-to-frame modes
+
 ### Writing Good Prompts
 
 **For Image Generation (Imagen 4 Ultra or Nano Banana):**
@@ -351,17 +398,30 @@ npx prisma studio
 - One change at a time works best
 - Nano Banana excels at maintaining facial features and identity
 
+**For Video Generation (Veo 3.1):**
+- Describe the scene: *"A serene beach at sunset, waves gently rolling onto shore"*
+- Include camera movement: *"Camera pans slowly from left to right"* or *"Drone shot descending"*
+- Specify motion/action: *"A person walking along the beach"* or *"Leaves rustling in the wind"*
+- Lighting and atmosphere: *"Golden hour lighting, warm tones"* or *"Misty morning, soft diffused light"*
+- Veo 3.1 excels at: Natural scenery, realistic physics, cinematic camera work, subtle motion
+
 ### Example Prompts
 
-**Creation:**
+**Image Creation:**
 - *"A cozy coffee shop interior, warm lighting, autumn vibes, cinematic"*
 - *"Futuristic city skyline at night, neon lights, cyberpunk style"*
 - *"Minimalist product photo, white background, professional studio lighting"*
 
-**Editing:**
+**Image Editing:**
 - *"Change the background to a beach sunset"*
 - *"Make the person's outfit formal business attire"*
 - *"Add a smile and brighter lighting"*
+
+**Video Generation:**
+- *"A calico kitten playing with a ball of yarn, morning sunlight streaming through a window, camera slowly zooms in"*
+- *"Aerial view of a winding river through a lush forest, camera following the water downstream"*
+- *"Close-up of raindrops falling on a window, city lights blurred in the background, melancholic mood"*
+- *"Time-lapse style clouds moving across a blue sky over a mountain range, peaceful atmosphere"*
 
 ---
 
@@ -645,6 +705,26 @@ actions {
 - **Features:** 16 fully implemented
 - **Dependencies:** 451 npm packages
 - **Development Time:** Single session
+
+---
+
+## 🔧 Troubleshooting Notes
+
+**Veo 3.1 Image-to-Video Setup:**
+- The SDK requires `imageBytes` as a **base64-encoded string**, not a raw Buffer
+- Convert with: `imageBuffer.toString('base64')`
+- Pass directly to `generateVideos()` - no file upload needed:
+  ```javascript
+  const base64Image = imageBuffer.toString('base64');
+  await ai.models.generateVideos({
+    model: 'veo-3.1-generate-preview',
+    prompt: 'Your prompt here',
+    image: {
+      imageBytes: base64Image,  // base64 string
+      mimeType: 'image/png'
+    }
+  });
+  ```
 
 ---
 

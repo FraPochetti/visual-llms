@@ -37,15 +37,18 @@ export async function GET() {
         const calculateStats = (assets: typeof allAssets) => {
             const imagen4Count = assets.filter(a => a.provider === 'google-imagen4').length;
             const nanoBananaCount = assets.filter(a => a.provider === 'gemini-nano-banana').length;
+            const veo31Count = assets.filter(a => a.provider === 'google-veo-3.1').length;
 
             const imagen4Cost = calculateCost('google-imagen4', imagen4Count);
             const nanoBananaCost = calculateCost('gemini-nano-banana', nanoBananaCount);
+            const veo31Cost = calculateCost('google-veo-3.1', veo31Count);
 
             return {
                 imagen4: imagen4Count,
                 nanoBanana: nanoBananaCount,
-                total: imagen4Count + nanoBananaCount,
-                cost: imagen4Cost + nanoBananaCost,
+                veo31: veo31Count,
+                total: imagen4Count + nanoBananaCount + veo31Count,
+                cost: imagen4Cost + nanoBananaCost + veo31Cost,
             };
         };
 

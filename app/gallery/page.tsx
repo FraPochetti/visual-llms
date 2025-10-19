@@ -25,6 +25,7 @@ export default function GalleryPage() {
     const [assets, setAssets] = useState<MediaAsset[]>([]);
     const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'video'>('all');
 
     useEffect(() => {
         loadGallery();
@@ -91,6 +92,37 @@ export default function GalleryPage() {
 
             {/* Gallery grid */}
             <main className="max-w-7xl mx-auto px-6 py-8">
+                {/* Media filter tabs */}
+                <div className="flex gap-2 mb-6">
+                    <button
+                        onClick={() => setMediaFilter('all')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'all'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                    >
+                        All ({assets.length})
+                    </button>
+                    <button
+                        onClick={() => setMediaFilter('image')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'image'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                    >
+                        Images ({assets.filter(a => a.kind === 'image').length})
+                    </button>
+                    <button
+                        onClick={() => setMediaFilter('video')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'video'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                    >
+                        Videos ({assets.filter(a => a.kind === 'video').length})
+                    </button>
+                </div>
+
                 {isLoading ? (
                     <div className="flex items-center justify-center h-64">
                         <div className="text-gray-500 dark:text-gray-400">Loading...</div>
@@ -98,26 +130,48 @@ export default function GalleryPage() {
                 ) : assets.length === 0 ? (
                     <div className="flex items-center justify-center h-64">
                         <div className="text-center text-gray-500 dark:text-gray-400">
-                            <p className="text-lg mb-2">No images yet</p>
+                            <p className="text-lg mb-2">No media yet</p>
                             <p className="text-sm">
-                                Create or save images from the chat to see them here.
+                                Create or save images/videos from the chat to see them here.
                             </p>
                         </div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {assets.map((asset) => (
+                        {assets.filter(asset =>
+                            mediaFilter === 'all' || asset.kind === mediaFilter
+                        ).map((asset) => (
                             <div
                                 key={asset.id}
                                 onClick={() => setSelectedAsset(asset)}
                                 className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer border border-gray-200 dark:border-gray-700"
                             >
                                 <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative">
-                                    <img
-                                        src={getImageUrl(asset.path)}
-                                        alt="Gallery item"
-                                        className="w-full h-full object-cover"
-                                    />
+                                    {asset.kind === 'video' ? (
+                                        <>
+                                            <video
+                                                src={getImageUrl(asset.path)}
+                                                className="w-full h-full object-cover"
+                                                preload="metadata"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <div className="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
+                                                    <div className="w-0 h-0 border-l-8 border-l-white border-y-6 border-y-transparent ml-1"></div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <img
+                                            src={getImageUrl(asset.path)}
+                                            alt="Gallery item"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    )}
+                                    {asset.provider === 'google-veo-3.1' && (
+                                        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                                            🎬 VIDEO
+                                        </div>
+                                    )}
                                     {(asset.provider === 'gemini-nano-banana' || asset.provider === 'google-imagen4') && (
                                         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
                                             ✨ AI
@@ -154,7 +208,7 @@ export default function GalleryPage() {
                             <div className="flex items-start justify-between mb-4">
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        Image Details
+                                        {selectedAsset.kind === 'video' ? 'Video' : 'Image'} Details
                                     </h2>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         Created {formatDate(selectedAsset.createdAt)}
@@ -169,11 +223,22 @@ export default function GalleryPage() {
                             </div>
 
                             <div className="mb-4">
-                                <img
-                                    src={getImageUrl(selectedAsset.path)}
-                                    alt="Selected"
-                                    className="w-full rounded-lg"
-                                />
+                                {selectedAsset.kind === 'video' ? (
+                                    <video
+                                        src={getImageUrl(selectedAsset.path)}
+                                        controls
+                                        className="w-full rounded-lg"
+                                        preload="metadata"
+                                    >
+                                        Your browser does not support video playback.
+                                    </video>
+                                ) : (
+                                    <img
+                                        src={getImageUrl(selectedAsset.path)}
+                                        alt="Selected"
+                                        className="w-full rounded-lg"
+                                    />
+                                )}
                             </div>
 
                             <div className="space-y-3">
@@ -183,7 +248,22 @@ export default function GalleryPage() {
                                     </h3>
                                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         <p>Size: {selectedAsset.bytes} bytes</p>
-                                        {selectedAsset.width && selectedAsset.height && (
+                                        {selectedAsset.kind === 'video' && selectedAsset.metadata && (() => {
+                                            try {
+                                                const metadata = JSON.parse(selectedAsset.metadata);
+                                                return (
+                                                    <>
+                                                        <p>Duration: {metadata.duration || 8}s</p>
+                                                        <p>Resolution: {metadata.resolution || '720p'}</p>
+                                                        <p>FPS: {metadata.fps || 24}</p>
+                                                        <p>Audio: {metadata.hasAudio ? 'Yes' : 'No'}</p>
+                                                    </>
+                                                );
+                                            } catch {
+                                                return null;
+                                            }
+                                        })()}
+                                        {selectedAsset.kind === 'image' && selectedAsset.width && selectedAsset.height && (
                                             <p>
                                                 Dimensions: {selectedAsset.width} × {selectedAsset.height}
                                             </p>
