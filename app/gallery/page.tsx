@@ -97,8 +97,8 @@ export default function GalleryPage() {
                     <button
                         onClick={() => setMediaFilter('all')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'all'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                     >
                         All ({assets.length})
@@ -106,8 +106,8 @@ export default function GalleryPage() {
                     <button
                         onClick={() => setMediaFilter('image')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'image'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                     >
                         Images ({assets.filter(a => a.kind === 'image').length})
@@ -115,8 +115,8 @@ export default function GalleryPage() {
                     <button
                         onClick={() => setMediaFilter('video')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'video'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                     >
                         Videos ({assets.filter(a => a.kind === 'video').length})
@@ -302,17 +302,20 @@ export default function GalleryPage() {
 
                             <div className="mt-6 space-y-3">
                                 <div className="flex space-x-3">
-                                    <Link
-                                        href={`/?imageId=${selectedAsset.id}`}
-                                        className="flex-1 px-4 py-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                    >
-                                        Send to Chat
-                                    </Link>
+                                    {selectedAsset.kind === 'image' && (
+                                        <Link
+                                            href={`/?imageId=${selectedAsset.id}`}
+                                            className="flex-1 px-4 py-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                        >
+                                            Send to Chat
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={() => {
                                             window.open(getImageUrl(selectedAsset.path), '_blank');
                                         }}
-                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                                        className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition ${selectedAsset.kind === 'image' ? '' : 'flex-1'
+                                            }`}
                                     >
                                         Open Full Size
                                     </button>
@@ -340,11 +343,11 @@ export default function GalleryPage() {
                                     }}
                                     className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                                 >
-                                    ⬇️ Download Image
+                                    ⬇️ Download {selectedAsset.kind === 'video' ? 'Video' : 'Image'}
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (!confirm('Are you sure you want to delete this image? This cannot be undone.')) {
+                                        if (!confirm(`Are you sure you want to delete this ${selectedAsset.kind}? This cannot be undone.`)) {
                                             return;
                                         }
 
@@ -362,13 +365,13 @@ export default function GalleryPage() {
                                                 alert('Failed to delete image');
                                             }
                                         } catch (error) {
-                                            console.error('Error deleting image:', error);
-                                            alert('Failed to delete image');
+                                            console.error(`Error deleting ${selectedAsset.kind}:`, error);
+                                            alert(`Failed to delete ${selectedAsset.kind}`);
                                         }
                                     }}
                                     className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                                 >
-                                    🗑️ Delete Image
+                                    🗑️ Delete {selectedAsset.kind === 'video' ? 'Video' : 'Image'}
                                 </button>
                             </div>
                         </div>
