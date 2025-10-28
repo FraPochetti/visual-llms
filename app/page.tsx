@@ -125,6 +125,49 @@ export default function ChatPage() {
         }
     }, [searchParams]);
 
+    // Load chat history from localStorage on mount
+    useEffect(() => {
+        const savedHistory = localStorage.getItem('visual-neurons-chat-history');
+        if (savedHistory) {
+            try {
+                const parsed = JSON.parse(savedHistory);
+                // Convert timestamp strings back to Date objects
+                const restored = parsed.map((msg: any) => ({
+                    ...msg,
+                    timestamp: new Date(msg.timestamp),
+                }));
+                setMessages(restored);
+                console.log('Restored', restored.length, 'messages from localStorage');
+            } catch (e) {
+                console.error('Failed to load chat history:', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    // Save chat history to localStorage whenever it changes
+    useEffect(() => {
+        if (messages.length > 0) {
+            // Keep last 100 messages only to prevent overflow
+            const toSave = messages.slice(-100);
+            localStorage.setItem('visual-neurons-chat-history', JSON.stringify(toSave));
+        }
+    }, [messages]);
+
+    // Clear chat history
+    const clearChat = () => {
+        setMessages([]);
+        localStorage.removeItem('visual-neurons-chat-history');
+        // Also clear selected images
+        setSelectedImage(null);
+        setSelectedImageUrl(null);
+        setFirstFrameId(null);
+        setFirstFrameUrl(null);
+        setLastFrameId(null);
+        setLastFrameUrl(null);
+        setReferenceImageIds([]);
+        setReferenceImageUrls([]);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
@@ -362,6 +405,15 @@ export default function ChatPage() {
                             </p>
                         </div>
                         <div className="flex items-center space-x-3">
+                            {messages.length > 0 && (
+                                <button
+                                    onClick={clearChat}
+                                    className="px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition"
+                                    title="Clear chat history"
+                                >
+                                    Clear Chat
+                                </button>
+                            )}
                             <Link
                                 href="/usage"
                                 className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"

@@ -57,12 +57,14 @@ A complete image and video generation platform with multiple AI models:
 - Only shows explicitly saved media (no auto-save clutter)
 
 **✅ Smart Features:**
+- **Chat persistence**: History saved to localStorage, survives refreshes
 - **Iterative editing**: Each edit builds on the previous result
 - **Undo edits**: Click "← Previous" to revert to earlier version
 - **Save button**: Choose which images to keep
 - **Image chaining**: "Add scarf" → "Make it red" → "Now add a hat"
 - **No duplicates**: Intelligent loading from gallery
 - **Session isolation**: Each user's images are private
+- **Clear Chat**: Reset conversation anytime with one click
 
 **🐛 Bugs Fixed:**
 - React hydration warning from browser extensions
@@ -74,7 +76,7 @@ A complete image and video generation platform with multiple AI models:
 
 **🆕 Recent Additions:**
 
-**Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select + Webhooks:**
+**Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select + Webhooks + Chat Persistence:**
 - **Simplified Video UI** - Two clear modes instead of confusing options
   - **Standard Mode**: Frame anchors (first/last optional), flexible duration (1-8s)
   - **Reference Mode (R2V)**: Subject consistency (1-3 ref images required), locked 8s/16:9
@@ -90,6 +92,11 @@ A complete image and video generation platform with multiple AI models:
   - Auto-saved to gallery when complete
   - No wasted API credits from page refreshes
   - Optional: Set WEBHOOK_BASE_URL in .env to enable
+- **Chat History Persistence** - Never lose your work
+  - Chat history saved to localStorage automatically
+  - Survives page refreshes and navigation
+  - Keeps last 100 messages
+  - "Clear Chat" button to reset when needed
 
 **Oct 27, 2025 - Replicate API Migration:**
 - **Migrated to Replicate API** - Single unified API for all models
@@ -516,16 +523,24 @@ npx prisma studio
 - Webhook saves to gallery automatically when done
 - Check gallery to see completed videos!
 
+**What is ngrok?**
+Ngrok creates a **secure tunnel** from a public HTTPS URL to your localhost. When you run `ngrok http 3000`, it gives you something like `https://abc123.ngrok-free.app` that forwards to your `localhost:3000`. This allows Replicate to send webhooks to your local development machine.
+
 **Setup for Development:**
-1. Install ngrok: `npm install -g ngrok`
-2. Start ngrok: `ngrok http 3000`
-3. Copy the HTTPS URL: `https://abc123.ngrok.io`
-4. Add to `.env`: `WEBHOOK_BASE_URL=https://abc123.ngrok.io`
-5. Restart server
+1. Sign up at https://dashboard.ngrok.com/signup (free)
+2. Get your authtoken from https://dashboard.ngrok.com/get-started/your-authtoken
+3. Configure: `ngrok config add-authtoken YOUR_TOKEN`
+4. Install: `npm install -g ngrok`
+5. Start ngrok in a **separate terminal**: `ngrok http 3000`
+6. Copy the HTTPS URL shown (e.g., `https://abc123.ngrok-free.app`)
+7. Add to `.env`: `WEBHOOK_BASE_URL=https://abc123.ngrok-free.app`
+8. Restart your dev server: `npm run dev`
+
+**Important:** Keep both terminals running - one for your app, one for ngrok!
 
 **Setup for Production:**
 - Just set `WEBHOOK_BASE_URL=https://yourdomain.com`
-- No ngrok needed
+- No ngrok needed (your domain is already public)
 
 **Benefits:**
 - ✅ Videos complete even if you leave
