@@ -80,6 +80,7 @@ A complete image and video generation platform with multiple AI models:
   - **Reference Mode (R2V)**: Subject consistency (1-3 ref images required), locked 8s/16:9
   - Mode-specific button visibility (no more confusion!)
   - Locked settings when required by API
+  - **Collapsible options** - Click "Show/Hide Options" to save screen space on smaller devices
 - **Gallery Multi-Select** - Load multiple images to chat at once
   - Click checkboxes to select multiple images
   - Send 2-3 images for video with frame anchors or reference consistency

@@ -42,6 +42,7 @@ export default function ChatPage() {
     const [videoDuration, setVideoDuration] = useState<number>(8);
     const [videoResolution, setVideoResolution] = useState<'720p' | '1080p'>('1080p');
     const [generateAudio, setGenerateAudio] = useState<boolean>(true);
+    const [showVideoOptions, setShowVideoOptions] = useState<boolean>(false); // Collapse by default to save space
 
     // Handle images from gallery (single or multiple)
     useEffect(() => {
@@ -650,12 +651,9 @@ export default function ChatPage() {
 
                     {/* Video mode settings - only visible in video mode */}
                     {mode === 'video' && (
-                        <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 space-y-4">
-                            {/* Mode Selector */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Video Generation Mode
-                                </label>
+                        <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
+                            {/* Compact Mode Selector with Toggle */}
+                            <div className="flex items-center justify-between">
                                 <div className="flex gap-4">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -666,7 +664,7 @@ export default function ChatPage() {
                                             className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
                                         />
                                         <span className="text-sm text-gray-700 dark:text-gray-300">
-                                            Standard <span className="text-xs text-gray-500">(frame anchors)</span>
+                                            Standard
                                         </span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -678,226 +676,233 @@ export default function ChatPage() {
                                             className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
                                         />
                                         <span className="text-sm text-gray-700 dark:text-gray-300">
-                                            Reference <span className="text-xs text-gray-500">(R2V subject consistency)</span>
+                                            Reference (R2V)
                                         </span>
                                     </label>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {videoGenerationMode === 'standard' && 'Control video start/end with optional frame anchors'}
-                                    {videoGenerationMode === 'reference' && 'Generate with consistent character/object appearance (16:9, 8s only)'}
-                                </p>
+                                <button
+                                    onClick={() => setShowVideoOptions(!showVideoOptions)}
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                >
+                                    {showVideoOptions ? '▼ Hide Options' : '▶ Show Options'}
+                                </button>
                             </div>
 
-                            {/* Standard Mode Options */}
-                            {videoGenerationMode === 'standard' && (
-                                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                                    {/* First Frame */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            First Frame (Optional)
-                                        </label>
-                                        {firstFrameUrl ? (
-                                            <div className="flex items-center gap-2">
-                                                <img src={firstFrameUrl} alt="First frame" className="w-20 h-20 object-cover rounded" />
-                                                <button
-                                                    onClick={() => {
-                                                        setFirstFrameId(null);
-                                                        setFirstFrameUrl(null);
-                                                    }}
-                                                    className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Click "First Frame" on any image above
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Last Frame */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Last Frame (Optional)
-                                        </label>
-                                        {lastFrameUrl ? (
-                                            <div className="flex items-center gap-2">
-                                                <img src={lastFrameUrl} alt="Last frame" className="w-20 h-20 object-cover rounded" />
-                                                <button
-                                                    onClick={() => {
-                                                        setLastFrameId(null);
-                                                        setLastFrameUrl(null);
-                                                    }}
-                                                    className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Click "Last Frame" on any image above
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Duration */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Duration: {videoDuration}s
-                                        </label>
-                                        <input
-                                            type="range"
-                                            min="1"
-                                            max="8"
-                                            value={videoDuration}
-                                            onChange={(e) => setVideoDuration(parseInt(e.target.value))}
-                                            className="w-full"
-                                        />
-                                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                                            <span>1s</span>
-                                            <span>8s</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Resolution */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Resolution
-                                        </label>
-                                        <div className="flex gap-4">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    value="720p"
-                                                    checked={videoResolution === '720p'}
-                                                    onChange={(e) => setVideoResolution(e.target.value as '720p')}
-                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">720p</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    value="1080p"
-                                                    checked={videoResolution === '1080p'}
-                                                    onChange={(e) => setVideoResolution(e.target.value as '1080p')}
-                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">1080p</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {/* Audio */}
-                                    <div>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={generateAudio}
-                                                onChange={(e) => setGenerateAudio(e.target.checked)}
-                                                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600 rounded"
-                                            />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                                                Generate Audio
-                                            </span>
-                                        </label>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                                            Context-aware audio synthesis
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Reference Mode Options */}
-                            {videoGenerationMode === 'reference' && (
-                                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                                    {/* Reference Images */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Reference Images ({referenceImageUrls.length}/3) {referenceImageUrls.length === 0 && <span className="text-red-600">*Required</span>}
-                                        </label>
-                                        {referenceImageUrls.length > 0 ? (
-                                            <div className="flex gap-2 flex-wrap">
-                                                {referenceImageUrls.map((url, index) => (
-                                                    <div key={index} className="relative">
-                                                        <img src={url} alt={`Reference ${index + 1}`} className="w-16 h-16 object-cover rounded" />
+                            {/* Collapsible Options Panel */}
+                            {showVideoOptions && (
+                                <>
+                                    {/* Standard Mode Options */}
+                                    {videoGenerationMode === 'standard' && (
+                                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                            {/* First Frame */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    First Frame (Optional)
+                                                </label>
+                                                {firstFrameUrl ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={firstFrameUrl} alt="First frame" className="w-20 h-20 object-cover rounded" />
                                                         <button
                                                             onClick={() => {
-                                                                setReferenceImageIds(prev => prev.filter((_, i) => i !== index));
-                                                                setReferenceImageUrls(prev => prev.filter((_, i) => i !== index));
+                                                                setFirstFrameId(null);
+                                                                setFirstFrameUrl(null);
                                                             }}
-                                                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                                                            className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
                                                         >
-                                                            ×
+                                                            Remove
                                                         </button>
                                                     </div>
-                                                ))}
+                                                ) : (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Click "First Frame" on any image above
+                                                    </p>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Click "+ Reference" on images above for subject consistency
-                                            </p>
-                                        )}
-                                    </div>
 
-                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
-                                        <p className="text-xs text-blue-800 dark:text-blue-300">
-                                            <strong>ⓘ R2V Mode Constraints:</strong><br />
-                                            • Duration locked to 8 seconds<br />
-                                            • Aspect ratio locked to 16:9<br />
-                                            • Last frame is ignored in this mode<br />
-                                            • Requires 1-3 reference images
-                                        </p>
-                                    </div>
+                                            {/* Last Frame */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Last Frame (Optional)
+                                                </label>
+                                                {lastFrameUrl ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={lastFrameUrl} alt="Last frame" className="w-20 h-20 object-cover rounded" />
+                                                        <button
+                                                            onClick={() => {
+                                                                setLastFrameId(null);
+                                                                setLastFrameUrl(null);
+                                                            }}
+                                                            className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Click "Last Frame" on any image above
+                                                    </p>
+                                                )}
+                                            </div>
 
-                                    {/* Resolution */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Resolution
-                                        </label>
-                                        <div className="flex gap-4">
-                                            <label className="flex items-center gap-2 cursor-pointer">
+                                            {/* Duration */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Duration: {videoDuration}s
+                                                </label>
                                                 <input
-                                                    type="radio"
-                                                    value="720p"
-                                                    checked={videoResolution === '720p'}
-                                                    onChange={(e) => setVideoResolution(e.target.value as '720p')}
-                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                    type="range"
+                                                    min="1"
+                                                    max="8"
+                                                    value={videoDuration}
+                                                    onChange={(e) => setVideoDuration(parseInt(e.target.value))}
+                                                    className="w-full"
                                                 />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">720p</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    value="1080p"
-                                                    checked={videoResolution === '1080p'}
-                                                    onChange={(e) => setVideoResolution(e.target.value as '1080p')}
-                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">1080p</span>
-                                            </label>
+                                                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                    <span>1s</span>
+                                                    <span>8s</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Resolution */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Resolution
+                                                </label>
+                                                <div className="flex gap-4">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            value="720p"
+                                                            checked={videoResolution === '720p'}
+                                                            onChange={(e) => setVideoResolution(e.target.value as '720p')}
+                                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                        />
+                                                        <span className="text-sm text-gray-700 dark:text-gray-300">720p</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            value="1080p"
+                                                            checked={videoResolution === '1080p'}
+                                                            onChange={(e) => setVideoResolution(e.target.value as '1080p')}
+                                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                        />
+                                                        <span className="text-sm text-gray-700 dark:text-gray-300">1080p</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Audio */}
+                                            <div>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={generateAudio}
+                                                        onChange={(e) => setGenerateAudio(e.target.checked)}
+                                                        className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600 rounded"
+                                                    />
+                                                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                        Generate Audio
+                                                    </span>
+                                                </label>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                                                    Context-aware audio synthesis
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    {/* Audio */}
-                                    <div>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={generateAudio}
-                                                onChange={(e) => setGenerateAudio(e.target.checked)}
-                                                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600 rounded"
-                                            />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                                                Generate Audio
-                                            </span>
-                                        </label>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                                            Context-aware audio synthesis
-                                        </p>
-                                    </div>
-                                </div>
+                                    {/* Reference Mode Options */}
+                                    {videoGenerationMode === 'reference' && (
+                                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                            {/* Reference Images */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Reference Images ({referenceImageUrls.length}/3) {referenceImageUrls.length === 0 && <span className="text-red-600">*Required</span>}
+                                                </label>
+                                                {referenceImageUrls.length > 0 ? (
+                                                    <div className="flex gap-2 flex-wrap">
+                                                        {referenceImageUrls.map((url, index) => (
+                                                            <div key={index} className="relative">
+                                                                <img src={url} alt={`Reference ${index + 1}`} className="w-16 h-16 object-cover rounded" />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setReferenceImageIds(prev => prev.filter((_, i) => i !== index));
+                                                                        setReferenceImageUrls(prev => prev.filter((_, i) => i !== index));
+                                                                    }}
+                                                                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Click "+ Reference" on images above for subject consistency
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                                <p className="text-xs text-blue-800 dark:text-blue-300">
+                                                    <strong>ⓘ R2V Mode Constraints:</strong><br />
+                                                    • Duration locked to 8 seconds<br />
+                                                    • Aspect ratio locked to 16:9<br />
+                                                    • Last frame is ignored in this mode<br />
+                                                    • Requires 1-3 reference images
+                                                </p>
+                                            </div>
+
+                                            {/* Resolution */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Resolution
+                                                </label>
+                                                <div className="flex gap-4">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            value="720p"
+                                                            checked={videoResolution === '720p'}
+                                                            onChange={(e) => setVideoResolution(e.target.value as '720p')}
+                                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                        />
+                                                        <span className="text-sm text-gray-700 dark:text-gray-300">720p</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            value="1080p"
+                                                            checked={videoResolution === '1080p'}
+                                                            onChange={(e) => setVideoResolution(e.target.value as '1080p')}
+                                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                        />
+                                                        <span className="text-sm text-gray-700 dark:text-gray-300">1080p</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Audio */}
+                                            <div>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={generateAudio}
+                                                        onChange={(e) => setGenerateAudio(e.target.checked)}
+                                                        className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600 rounded"
+                                                    />
+                                                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                        Generate Audio
+                                                    </span>
+                                                </label>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                                                    Context-aware audio synthesis
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}
