@@ -56,19 +56,31 @@ export default function UsagePage() {
                 <>
                     <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Imagen 4:</span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/google/imagen-4-ultra" target="_blank" className="underline hover:text-blue-600">
+                                    Imagen 4
+                                </Link>:
+                            </span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.imagen4} {period.imagen4 === 1 ? 'image' : 'images'}
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Gemini 2.5 Flash Image:</span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/google/nano-banana" target="_blank" className="underline hover:text-blue-600">
+                                    Nano Banana
+                                </Link>:
+                            </span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.nanoBanana} {period.nanoBanana === 1 ? 'op' : 'ops'}
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">Veo 3.1:</span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/google/veo-3.1" target="_blank" className="underline hover:text-blue-600">
+                                    Veo 3.1
+                                </Link>:
+                            </span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.veo31} {period.veo31 === 1 ? 'video' : 'videos'}
                             </span>
@@ -152,17 +164,29 @@ export default function UsagePage() {
                             </h3>
                             <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                                 <p>
-                                    <strong>Imagen 4 Ultra:</strong> $0.06 per image (highest quality)
+                                    <strong>
+                                        <Link href="https://replicate.com/google/imagen-4-ultra" target="_blank" className="underline hover:text-blue-600">
+                                            Imagen 4 Ultra
+                                        </Link>:
+                                    </strong> $0.06 per image (highest quality)
                                 </p>
                                 <p>
-                                    <strong>Gemini 2.5 Flash Image Standard:</strong> ≈$0.039 per 1024×1024 image
+                                    <strong>
+                                        <Link href="https://replicate.com/google/nano-banana" target="_blank" className="underline hover:text-blue-600">
+                                            Nano Banana
+                                        </Link>:
+                                    </strong> ≈$0.039 per 1024×1024 image
                                 </p>
                                 <p>
-                                    <strong>Veo 3.1:</strong> $3.20 per 8-second video ($0.40/second, includes native audio)
+                                    <strong>
+                                        <Link href="https://replicate.com/google/veo-3.1" target="_blank" className="underline hover:text-blue-600">
+                                            Veo 3.1
+                                        </Link>:
+                                    </strong> $3.20 per 8-second video ($0.40/second, includes native audio)
                                 </p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
-                                    Costs are estimates based on official Gemini API pricing. Actual costs may vary based on resolution, batch mode, and input tokens.
-                                    See <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">official pricing</a> for details.
+                                    Costs are estimates based on Replicate pricing. Actual costs may vary based on runtime, hardware, resolution, and batch mode.
+                                    See <a href="https://replicate.com/pricing" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Replicate pricing</a> for details.
                                 </p>
                             </div>
                         </div>

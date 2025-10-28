@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { generateVideo } from '@/lib/gemini';
+import { generateVideo } from '@/lib/replicate';
 import { saveVideo, readMediaFile } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
@@ -9,30 +9,35 @@ export async function POST(request: NextRequest) {
         const sessionId = await getOrCreateSession();
         const {
             prompt,
-            mode = 'text',
-            firstFrameId
+            videoGenerationMode = 'standard',
+            firstFrameId,
+            lastFrameId,
+            referenceImageIds = [],
+            duration = 8,
+            resolution = '1080p',
+            generateAudio = true,
         } = await request.json();
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
-        // Validate mode
-        if (!['text', 'single-frame'].includes(mode)) {
-            return NextResponse.json({ error: 'Invalid mode' }, { status: 400 });
+        // Validate video generation mode
+        if (!['standard', 'reference'].includes(videoGenerationMode)) {
+            return NextResponse.json({ error: 'Invalid video generation mode' }, { status: 400 });
         }
 
-        // Load frame image if provided
+        // Validate reference mode requirements
+        if (videoGenerationMode === 'reference' && (!referenceImageIds || referenceImageIds.length === 0)) {
+            return NextResponse.json({
+                error: 'Reference mode requires at least 1 reference image'
+            }, { status: 400 });
+        }
+
+        // Load first frame image if provided (standard mode only)
         let firstFrameBuffer: Buffer | undefined;
 
-        if (mode === 'single-frame') {
-            if (!firstFrameId) {
-                return NextResponse.json({
-                    error: 'First frame is required for single-frame mode'
-                }, { status: 400 });
-            }
-
-            // Load first frame from database
+        if (videoGenerationMode === 'standard' && firstFrameId) {
             const firstFrameAsset = await prisma.mediaAsset.findUnique({
                 where: { id: firstFrameId }
             });
@@ -46,19 +51,61 @@ export async function POST(request: NextRequest) {
             firstFrameBuffer = await readMediaFile(firstFrameAsset.path);
         }
 
+        // Load last frame image if provided (standard mode only, ignored in reference mode)
+        let lastFrameBuffer: Buffer | undefined;
+
+        if (videoGenerationMode === 'standard' && lastFrameId) {
+            const lastFrameAsset = await prisma.mediaAsset.findUnique({
+                where: { id: lastFrameId }
+            });
+
+            if (!lastFrameAsset || lastFrameAsset.owner !== sessionId) {
+                return NextResponse.json({
+                    error: 'Last frame not found or access denied'
+                }, { status: 404 });
+            }
+
+            lastFrameBuffer = await readMediaFile(lastFrameAsset.path);
+        }
+
+        // Load reference images if provided (reference mode only, up to 3)
+        const referenceImageBuffers: Buffer[] = [];
+
+        if (videoGenerationMode === 'reference' && referenceImageIds && Array.isArray(referenceImageIds)) {
+            for (const refImageId of referenceImageIds.slice(0, 3)) {
+                const refAsset = await prisma.mediaAsset.findUnique({
+                    where: { id: refImageId }
+                });
+
+                if (refAsset && refAsset.owner === sessionId) {
+                    const buffer = await readMediaFile(refAsset.path);
+                    referenceImageBuffers.push(buffer);
+                }
+            }
+        }
+
         // Generate video with Veo 3.1
         let videoResult;
         try {
             videoResult = await generateVideo(prompt, {
-                firstFrame: firstFrameBuffer,
+                // Standard mode options
+                firstFrame: videoGenerationMode === 'standard' ? firstFrameBuffer : undefined,
+                lastFrame: videoGenerationMode === 'standard' ? lastFrameBuffer : undefined,
+                // Reference mode options
+                referenceImages: videoGenerationMode === 'reference' ? referenceImageBuffers : undefined,
+                // Common options
+                duration: videoGenerationMode === 'reference' ? 8 : duration, // Lock to 8s for reference mode
+                resolution: resolution as '720p' | '1080p',
+                aspectRatio: videoGenerationMode === 'reference' ? '16:9' : undefined, // Lock to 16:9 for reference mode
+                generateAudio: generateAudio,
             });
         } catch (geminiError: any) {
             console.error('Video generation API error:', geminiError);
 
             // Provide helpful error message
-            if (geminiError.message?.includes('API key')) {
+            if (geminiError.message?.includes('API key') || geminiError.message?.includes('auth')) {
                 return NextResponse.json(
-                    { error: 'Invalid or missing Gemini API key. Please check your .env file.' },
+                    { error: 'Invalid or missing Replicate API key. Please check your .env file.' },
                     { status: 401 }
                 );
             }
@@ -94,13 +141,16 @@ export async function POST(request: NextRequest) {
                 metadata: JSON.stringify({
                     prompt,
                     model: 'veo-3.1-generate-preview',
-                    mode,
+                    videoGenerationMode,
                     duration: videoResult.duration,
                     resolution: videoResult.resolution,
+                    aspectRatio: videoGenerationMode === 'reference' ? '16:9' : 'auto',
                     fps: 24,
-                    hasAudio: true,
+                    hasAudio: generateAudio,
                     generatedAt: new Date().toISOString(),
-                    firstFrameId: firstFrameId || null,
+                    firstFrameId: videoGenerationMode === 'standard' ? (firstFrameId || null) : null,
+                    lastFrameId: videoGenerationMode === 'standard' ? (lastFrameId || null) : null,
+                    referenceImageIds: videoGenerationMode === 'reference' ? (referenceImageIds || []) : [],
                 }),
             },
         });
@@ -113,8 +163,14 @@ export async function POST(request: NextRequest) {
                 assetId: mediaAsset.id,
                 detail: JSON.stringify({
                     prompt,
-                    mode,
-                    firstFrameId: firstFrameId || null,
+                    videoGenerationMode,
+                    firstFrameId: videoGenerationMode === 'standard' ? (firstFrameId || null) : null,
+                    lastFrameId: videoGenerationMode === 'standard' ? (lastFrameId || null) : null,
+                    referenceImageIds: videoGenerationMode === 'reference' ? (referenceImageIds || []) : [],
+                    duration: videoGenerationMode === 'reference' ? 8 : duration,
+                    resolution,
+                    aspectRatio: videoGenerationMode === 'reference' ? '16:9' : 'auto',
+                    generateAudio,
                 }),
             },
         });

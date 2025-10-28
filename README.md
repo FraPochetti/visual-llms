@@ -2,7 +2,7 @@
 
 A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nano Banana** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
 
-**Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Gemini API
+**Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API
 
 **Status:** ✅ Fully functional and production-ready! All core features including video generation implemented and tested.
 
@@ -19,18 +19,22 @@ A complete image and video generation platform with multiple AI models:
 - Local file storage at `/var/visualneurons/media/`
 - HTTP-only session cookies (no login required)
 
-**✅ Gemini Integration:**
-- Official `@google/generative-ai` SDK for Nano Banana
-- Official `@google/genai` SDK for Imagen 4 & Veo 3.1
-- **Triple model support:**
-  - **Imagen 4 Ultra** (`imagen-4.0-ultra-generate-001`) - Highest-fidelity image generation (default)
-  - **Nano Banana** (`gemini-2.5-flash-image`) - Alternative generation + editing
-  - **Veo 3.1** (`veo-3.1-generate-preview`) - Cinematic video generation with native audio
+**✅ Replicate API Integration:**
+- Single `replicate` npm package for all models
+- Unified API interface across all Google models
+- **Triple model support via Replicate:**
+  - **Imagen 4 Ultra** (`google/imagen-4-ultra`) - Highest-fidelity image generation (default)
+  - **Nano Banana** (`google/nano-banana`) - Alternative generation + editing
+  - **Veo 3.1** (`google/veo-3.1`) - Cinematic video generation with native audio
 - Text-to-image generation with model selection
 - Image editing with instruction prompts (Nano Banana only)
-- **Video generation** with 2 modes:
+- **Video generation** with multiple modes:
   - Text-to-video
-  - Image-to-video (single frame anchor)
+  - Image-to-video (first frame anchor)
+  - Video with last frame (ending anchor)
+  - Reference images (up to 3 for subject consistency)
+  - Configurable duration and resolution
+- Async prediction handling with polling
 - Comprehensive error handling
 
 **✅ User Interface:**
@@ -68,8 +72,32 @@ A complete image and video generation platform with multiple AI models:
 - AI badges on user-uploaded images
 - AI badge not showing on Imagen 4 generated images
 
-**🆕 Recent Additions (Oct 19, 2025):**
-- **Veo 3.1 Video Generation** - Full video creation with 2 modes
+**🆕 Recent Additions:**
+
+**Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select:**
+- **Simplified Video UI** - Two clear modes instead of confusing options
+  - **Standard Mode**: Frame anchors (first/last optional), flexible duration (1-8s)
+  - **Reference Mode (R2V)**: Subject consistency (1-3 ref images required), locked 8s/16:9
+  - Mode-specific button visibility (no more confusion!)
+  - Locked settings when required by API
+- **Gallery Multi-Select** - Load multiple images to chat at once
+  - Click checkboxes to select multiple images
+  - Send 2-3 images for video with frame anchors or reference consistency
+  - Auto-switches to Video mode when loading multiple images
+
+**Oct 27, 2025 - Replicate API Migration:**
+- **Migrated to Replicate API** - Single unified API for all models
+  - Replaced Google SDKs with Replicate npm package
+  - All models now accessed through Replicate's platform
+  - Simplified API key management (one key for everything)
+  - Better webhook support and async handling
+- **Updated pricing** - Cost tracking based on Replicate's pricing model
+  - Hardware-based pricing (GPU time)
+  - More accurate cost estimates
+  - Transparent prediction metrics
+
+**Oct 19, 2025:**
+            - **Veo 3.1 Video Generation** - Full video creation with 2 modes
   - Text-to-video: Generate 8-second videos from prompts
   - Image-to-video: Use image as starting frame
   - Native audio generation (automatic)
@@ -88,16 +116,12 @@ A complete image and video generation platform with multiple AI models:
 - **Usage & Costs Dashboard** - Track API spending and operations
   - Time periods: Today, This Week, This Month, All Time
   - Breakdown by model with estimated costs
-  - Based on official Google pricing
-- Python test scripts for standalone API testing
-  - **Imagen 4 test** (`test_imagen4.py`) - Generate images with Imagen 4
-  - **Veo 3.1 test** (`test_veo3.py`) - Generate videos with Veo 3.1 (with native audio)
-- Added `@google/genai` package for Imagen 4 & Veo 3.1 API support
+  - Based on Replicate pricing
 
 **Model Quick Comparison:**
-- **Imagen 4 Ultra**: ⭐⭐⭐⭐⭐ generation, ❌ editing, 2K resolution (2048×2048), highest-quality photorealistic images ($0.06/image)
-- **Gemini 2.5 Flash Image**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, 1024×1024 default, best for creative variations (≈$0.039/image)
-- **Veo 3.1**: ⭐⭐⭐⭐⭐ video generation, 8s videos, 720p/1080p, native audio, cinematic quality (pricing TBD)
+- **[Imagen 4 Ultra](https://replicate.com/google/imagen-4-ultra)**: ⭐⭐⭐⭐⭐ generation, ❌ editing, 2K resolution (2048×2048), highest-quality photorealistic images (~$0.08/image via Replicate)
+- **[Nano Banana](https://replicate.com/google/nano-banana)**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, 1024×1024 default, best for creative variations (~$0.05/image via Replicate)
+- **[Veo 3.1](https://replicate.com/google/veo-3.1)**: ⭐⭐⭐⭐⭐ video generation, 8s videos, 720p/1080p, native audio, cinematic quality (~$4.00/video via Replicate)
 
 ---
 
@@ -105,19 +129,19 @@ A complete image and video generation platform with multiple AI models:
 
 Your app is **fully set up** (server currently stopped). To start:
 
-### 1. Add Your Gemini API Key
+### 1. Add Your Replicate API Key
 
 ```bash
 # Edit the .env file
 nano .env
 
 # Add your key:
-GEMINI_API_KEY=your_actual_key_here
+REPLICATE_API_KEY=your_actual_key_here
 
 # Save: Ctrl+X, then Y, then Enter
 ```
 
-Get your API key: https://aistudio.google.com/app/apikey
+Get your API key: https://replicate.com/account/api-tokens
 
 ### 2. Restart the Server
 
@@ -141,7 +165,7 @@ npm run dev
 1. Select **"Create"** mode
 2. **Choose your model:**
    - **Imagen 4 (Standard)** - Default, highest-quality photorealistic generation (Ultra tier)
-   - **Nano Banana (Gemini)** - Alternative multimodal model
+   - **Nano Banana** - Alternative multimodal model
 3. Type a prompt: *"A serene mountain landscape at sunset"*
 4. Click **Send**
 5. Wait for the model to generate the image
@@ -161,13 +185,33 @@ npm run dev
 
 ### Generate Videos 🎬
 1. Select **"Video"** mode
-2. **Choose generation mode:**
-   - **Text Only** - Describe the video you want: *"A calico kitten playing in a sunny garden, camera panning slowly"*
-   - **Anchor with 1 Frame** - Click **"Use as Frame"** on any image, then describe the motion/action
-3. Type your video prompt describing the scene and motion
-4. Click **Send** and wait 11 seconds to 6 minutes (progress updates shown)
-5. **Generated video includes native audio!** (8s, 720p/1080p, 24fps, SynthID watermarked)
+2. **Choose video generation mode:**
+   - **Standard** (frame anchors) - Control start/end of video
+   - **Reference** (R2V) - Maintain consistent character/object appearance
+3. **Configure based on selected mode:**
+
+**Standard Mode:**
+- **First Frame** (optional): Click "First Frame" button on images
+- **Last Frame** (optional): Click "Last Frame" button on images  
+- **Duration**: Adjust 1-8 seconds with slider
+- **Resolution**: 720p or 1080p
+- **Generate Audio**: Toggle on/off
+
+**Reference Mode (R2V):**
+- **Reference Images** (1-3 required): Click "+ Reference" on images
+- **Duration**: Locked to 8 seconds (API requirement)
+- **Aspect Ratio**: Locked to 16:9 (API requirement)
+- **Resolution**: 720p or 1080p
+- **Generate Audio**: Toggle on/off
+- ⓘ Last frame is ignored in Reference mode
+
+4. Type your video prompt describing the scene and motion
+5. Click **Send** and wait (progress updates shown)
 6. Click **Save** to add to gallery
+
+**Image Selection Buttons:**
+- **Standard Mode**: "First Frame" (purple), "Last Frame" (orange)
+- **Reference Mode**: "+ Reference" (green, max 3)
 
 **Example Prompts:**
 - *"A serene park in spring next to a lake during golden hour, camera panning across wildflowers"*
@@ -192,6 +236,11 @@ npm run dev
 - Click **Gallery** to view **only saved media** (images and videos)
 - **Filter by type:** All / Images / Videos
 - Generated media **is NOT auto-saved** - you must click Save!
+- **Multi-Select:** ✨ NEW!
+  - Click checkbox in top-left corner of any image/video
+  - Select multiple items (great for video generation with multiple frames!)
+  - Click **"Send X to Chat →"** to load all selected items at once
+  - Automatically switches to Video mode when loading multiple images
 - **AI-generated content** shows badges:
   - **✨ AI** for images (Imagen 4 / Nano Banana)
   - **🎬 VIDEO** for Veo 3.1 videos
@@ -214,12 +263,13 @@ npm run dev
   - **All Time** - Total usage since you started
 - **Breakdown by model:**
   - Imagen 4 operations and cost
-  - Gemini 2.5 Flash Image operations and cost
+  - Nano Banana operations and cost
   - Total operations and estimated cost in USD
-- **Official pricing used:**
-  - Imagen 4 Ultra: $0.06 per image (highest quality tier)
-  - Gemini 2.5 Flash Image: ≈$0.039 per image
-- Costs are estimates; see [official pricing](https://ai.google.dev/gemini-api/docs/pricing) for details
+- **Replicate pricing used:**
+  - Imagen 4 Ultra: ~$0.08 per image (GPU time-based)
+  - Nano Banana: ~$0.05 per image (GPU time-based)
+  - Veo 3.1: ~$4.00 per 8-second video (GPU time-based)
+- Costs are estimates based on typical GPU time; see [Replicate pricing](https://replicate.com/pricing) for details
 
 ### Save Button Behavior
 - After generating or editing, click **"Save"** to keep the image
@@ -264,7 +314,7 @@ visual-llms/
 │   ├── page.tsx          # Main chat page
 │   └── layout.tsx        # Root layout
 ├── lib/
-│   ├── gemini.ts         # Gemini API integration
+│   ├── replicate.ts      # Replicate API integration
 │   ├── prisma.ts         # Database client
 │   ├── session.ts        # Session management
 │   └── storage.ts        # File operations
@@ -280,15 +330,16 @@ visual-llms/
 ## 🐛 Troubleshooting
 
 ### "API key not valid"
-- Check `.env` has `GEMINI_API_KEY=your_key` (no quotes)
+- Check `.env` has `REPLICATE_API_KEY=your_key` (no quotes)
 - Restart server after adding key
-- Verify key at https://aistudio.google.com/app/apikey
+- Verify key at https://replicate.com/account/api-tokens
 
 ### "Image generation not available"
 - Imagen 4 is the default and should work out of the box
-- If you get errors, verify your API key is valid
+- If you get errors, verify your Replicate API key is valid
 - Try switching to Nano Banana model if Imagen 4 has issues
 - Image editing always uses Nano Banana (works reliably)
+- Check Replicate dashboard for model availability
 
 ### Server won't start
 ```bash
@@ -323,7 +374,7 @@ npx prisma studio
 - ✅ Chat interface with create/edit/video modes
 - ✅ **Triple model support:**
   - ✅ Imagen 4 for high-fidelity image generation
-  - ✅ Gemini 2.5 Flash Image (Nano Banana) for generation + editing
+- ✅ Nano Banana for generation + editing
   - ✅ Veo 3.1 for cinematic video generation with audio
 - ✅ Model selection UI (radio buttons in Create mode)
 - ✅ Image generation from text prompts (Imagen 4 or Nano Banana)
@@ -346,6 +397,7 @@ npx prisma studio
 - ✅ SQLite database + local file storage (images & videos)
 - ✅ Smart AI badges and video indicators
 - ✅ Error handling and graceful degradation
+- ✅ **Replicate API integration** for unified model access
 
 **🔮 Future Enhancements:**
 - Style presets and variations
@@ -379,11 +431,18 @@ npx prisma studio
 
 **Veo 3.1 (Video Generation):**
 - Best for: Cinematic videos with realistic motion and audio
-- Strengths: Natural physics, smooth camera movements, native audio synthesis
-- Resolution: 720p/1080p at 24fps, 8-second videos
+- Strengths: Natural physics, smooth camera movements, native audio synthesis, subject consistency
+- Resolution: 720p/1080p at 24fps
 - Use when: You need short-form video content with professional quality
 - Speed: 11 seconds to 6 minutes (varies by complexity)
-- Features: Text-to-video, image-anchored, and frame-to-frame modes
+- **Two Generation Modes:**
+  - **Standard Mode**: Frame anchors (first/last), flexible duration (1-8s), any aspect ratio
+  - **Reference Mode (R2V)**: Subject consistency (1-3 ref images), fixed 8s, 16:9 only
+- Features: 
+  - Text-to-video
+  - First & last frame anchors (Standard mode)
+  - Reference images for consistent subjects (Reference mode)
+  - Context-aware audio generation
 
 ### Writing Good Prompts
 
@@ -475,7 +534,7 @@ npx prisma studio
 
 ## 🧪 Python Test Scripts
 
-Standalone Python scripts in `python_stuff/` for testing Gemini API models:
+Standalone Python scripts (legacy) were used for earlier experiments and are not required.
 
 ### Test Imagen 4 (Image Generation)
 
@@ -504,7 +563,7 @@ python test_veo3.py
 - Processing time: 11 seconds to 6 minutes (depending on server load)
 
 **Requirements:**
-- Same `.env` file with `GEMINI_API_KEY`
+  (no longer required)
 - Python 3.8+
 - Dependencies: `google-genai`, `python-dotenv`
 
@@ -520,10 +579,12 @@ python test_veo3.py
 
 ## 📚 Resources
 
-- **Gemini API Docs:** https://ai.google.dev/docs
-- **Google AI Studio:** https://aistudio.google.com/
-- **Veo 3.1 Documentation:** https://ai.google.dev/gemini-api/docs/video
-- **Nano Banana:** https://blog.google/products/gemini/updated-image-editing-model/
+- **Replicate API Docs:** https://replicate.com/docs
+- **Replicate Models:**
+  - **Imagen 4 Ultra:** https://replicate.com/google/imagen-4-ultra
+  - **Nano Banana:** https://replicate.com/google/nano-banana
+  - **Veo 3.1:** https://replicate.com/google/veo-3.1
+- **Replicate Pricing:** https://replicate.com/pricing
 - **Next.js Docs:** https://nextjs.org/docs
 - **Prisma Docs:** https://www.prisma.io/docs
 
@@ -556,7 +617,7 @@ python test_veo3.py
 | Run prod | `npm start` |
 | Add migrations | `npx prisma migrate dev` |
 
-**Your app is ready!** Just add your Gemini API key and start creating. 🎨✨
+**Your app is ready!** Just add your Replicate API key and start creating. 🎨✨
 
 ---
 
@@ -581,10 +642,13 @@ python test_veo3.py
 - `app/api/media/[...path]/route.ts` - Serve image files
 
 **Libraries:**
-- `lib/gemini.ts` - Gemini API client with dual model support (190+ lines)
-  - Imagen 4 integration via `@google/genai`
-  - Nano Banana via `@google/generative-ai`
-  - Three export functions: `generateImageWithImagen4()`, `generateImage()`, `editImage()`
+- `lib/replicate.ts` - Replicate API client with all model integrations (240+ lines)
+  - Imagen 4 Ultra via Replicate
+  - Nano Banana via Replicate
+  - Veo 3.1 via Replicate
+  - Four export functions: `generateImageWithImagen4()`, `generateImage()`, `editImage()`, `generateVideo()`
+  - Async prediction handling with polling
+- `lib/pricing.ts` - Replicate pricing calculations with GPU time tracking
 - `lib/prisma.ts` - Database client singleton
 - `lib/session.ts` - Session management utilities
 - `lib/storage.ts` - File system operations
@@ -596,13 +660,12 @@ python test_veo3.py
 
 **Configuration:**
 - `package.json` - Dependencies and scripts
-  - Added `@google/genai` for Imagen 4 support
-  - Existing `@google/generative-ai` for Nano Banana
+  - `replicate` npm package for unified API access
 - `tsconfig.json` - TypeScript configuration
 - `tailwind.config.ts` - Tailwind setup
 - `next.config.ts` - Next.js config with serverActions
 - `.gitignore` - Git ignore rules
-- `.env` - Environment variables (GEMINI_API_KEY)
+- `.env` - Environment variables (REPLICATE_API_KEY)
 
 ### Key Technical Decisions
 
@@ -632,6 +695,20 @@ python test_veo3.py
 - Prevents gallery clutter from experiments
 - User has full control
 - Can iterate many times before committing
+
+**Why Replicate API?**
+- **Single unified interface** for all Google models
+  - One API key instead of multiple SDKs
+  - Consistent async prediction model
+  - Better webhook support for long-running jobs
+- **Transparent pricing** based on actual GPU usage
+  - Pay only for compute time used
+  - Clear metrics for each prediction
+  - No hidden costs or tier complexity
+- **Easier to extend** with additional models
+  - Replicate has thousands of models available
+  - Simple integration pattern for new models
+  - Community-driven model ecosystem
 
 **Why Dual Model Support (Imagen 4 + Nano Banana)?**
 - **Imagen 4** is specialized for high-fidelity text-to-image generation
@@ -734,10 +811,10 @@ actions {
 
 Everything is implemented, tested, and documented:
 - Beautiful chat UI with inline images
-- Full Nano Banana (Gemini 2.5 Flash Image) integration
+- Full Nano Banana integration
 - Smart gallery with save/delete/download
 - Iterative editing workflow with undo
 - Session management
 - Production-ready error handling
 
-**Start creating:** Add your Gemini API key → `npm run dev` → Open browser → Make amazing images! 🎨✨
+**Start creating:** Add your Replicate API key → `npm run dev` → Open browser → Make amazing images! 🎨✨

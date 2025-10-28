@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
     title: "Visual Neurons",
-    description: "Image-first creative app powered by Nano Banana (Gemini 2.5 Flash Image)",
+    description: "Image-first creative app powered by Imagen 4, Nano Banana and Veo 3.1 (via Replicate)",
 };
 
 export default function RootLayout({

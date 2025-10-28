@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { editImage } from '@/lib/gemini';
+import { editImage } from '@/lib/replicate';
 import { readMediaFile, saveMediaFile } from '@/lib/storage';
 import path from 'path';
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         };
         const originalMimeType = mimeTypeMap[ext] || 'image/png';
 
-        // Edit image using Gemini Nano Banana
+        // Edit image using Nano Banana via Replicate
         let editedImageData: string;
         let editedMimeType: string;
 
@@ -52,11 +52,11 @@ export async function POST(request: NextRequest) {
             editedImageData = result.imageData;
             editedMimeType = result.mimeType;
         } catch (geminiError: any) {
-            console.error('Gemini API error during editing:', geminiError);
+            console.error('Replicate API error during editing:', geminiError);
 
-            if (geminiError.message?.includes('API key')) {
+            if (geminiError.message?.includes('API key') || geminiError.message?.includes('auth')) {
                 return NextResponse.json(
-                    { error: 'Invalid or missing Gemini API key. Please check your .env file.' },
+                    { error: 'Invalid or missing Replicate API key. Please check your .env file.' },
                     { status: 401 }
                 );
             }

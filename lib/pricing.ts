@@ -1,49 +1,71 @@
 /**
- * Official Gemini API pricing
- * Source: https://ai.google.dev/gemini-api/docs/pricing
+ * Replicate API pricing
+ * Source: https://replicate.com/pricing
  * Last updated: October 2025
+ * 
+ * Note: Replicate charges based on hardware usage and prediction time
+ * Pricing varies by model and hardware tier
  */
 
 export const API_PRICING = {
-    // Imagen 4 pricing (per image, regardless of resolution)
-    IMAGEN_4_FAST: 0.02,      // Fast tier
-    IMAGEN_4_STANDARD: 0.04,   // Standard tier
-    IMAGEN_4_ULTRA: 0.06,      // Ultra tier (our default)
+    // Imagen 4 Ultra on Replicate
+    // Estimated: ~$0.08 per image (based on GPU time)
+    IMAGEN_4_ULTRA: 0.08,
 
-    // Gemini 2.5 Flash Image pricing (per 1024×1024 image)
-    // Output = $30 per 1M tokens; ~1,290 tokens per image
-    GEMINI_FLASH_IMAGE_STANDARD: 0.039,  // Standard: ~$0.039 per image
-    GEMINI_FLASH_IMAGE_BATCH: 0.0195,    // Batch: ~$0.0195 per image (half price)
+    // Nano Banana on Replicate
+    // Estimated: ~$0.05 per image (based on GPU time)
+    NANO_BANANA: 0.05,
 
-    // Veo 3.1 pricing (per second of video)
-    VEO_3_1_PER_SECOND: 0.40,  // $0.40 per second
-    VEO_3_1_PER_VIDEO: 3.20,   // 8 seconds * $0.40 = $3.20 per 8-second video
+    // Veo 3.1 on Replicate
+    // Estimated: ~$4.00 per 8-second video (based on GPU time)
+    VEO_3_1_PER_VIDEO: 4.00,
 
-    // Input tokens (negligible for most prompts, not tracked separately)
-    // GEMINI_INPUT_STANDARD: 0.30 per 1M tokens
-    // GEMINI_INPUT_BATCH: 0.15 per 1M tokens
+    // Replicate hardware pricing (per second)
+    // These are used for more accurate cost calculation when predict_time is available
+    NVIDIA_T4_GPU: 0.000225,      // $0.81/hr
+    NVIDIA_A100_GPU: 0.001400,     // $5.04/hr
+    NVIDIA_H100_GPU: 0.001525,     // $5.49/hr
+    NVIDIA_L40S_GPU: 0.000975,     // $3.51/hr
 } as const;
 
 /**
  * Calculate estimated cost for API operations
- * Note: This assumes Imagen 4 Ultra, Gemini 2.5 Flash Image Standard, and Veo 3.1 pricing
+ * Note: Replicate pricing is based on prediction time and hardware used
  */
 export function calculateCost(
     provider: string,
     count: number
 ): number {
     if (provider === 'google-imagen4') {
-        // Using Ultra tier ($0.06 per image)
+        // Imagen 4 Ultra on Replicate
         return count * API_PRICING.IMAGEN_4_ULTRA;
     } else if (provider === 'gemini-nano-banana') {
-        // Gemini 2.5 Flash Image Standard pricing
-        return count * API_PRICING.GEMINI_FLASH_IMAGE_STANDARD;
+        // Nano Banana on Replicate
+        return count * API_PRICING.NANO_BANANA;
     } else if (provider === 'google-veo-3.1') {
-        // Veo 3.1: $3.20 per 8-second video
+        // Veo 3.1 on Replicate
         return count * API_PRICING.VEO_3_1_PER_VIDEO;
     }
     // local-fs uploads are free
     return 0;
+}
+
+/**
+ * Calculate cost based on actual prediction time and hardware
+ * More accurate when prediction metrics are available
+ */
+export function calculateCostFromPredictTime(
+    predictTimeSeconds: number,
+    hardwareType: 'T4' | 'A100' | 'H100' | 'L40S' = 'A100'
+): number {
+    const rateMap = {
+        'T4': API_PRICING.NVIDIA_T4_GPU,
+        'A100': API_PRICING.NVIDIA_A100_GPU,
+        'H100': API_PRICING.NVIDIA_H100_GPU,
+        'L40S': API_PRICING.NVIDIA_L40S_GPU,
+    };
+
+    return predictTimeSeconds * rateMap[hardwareType];
 }
 
 /**
@@ -52,4 +74,3 @@ export function calculateCost(
 export function formatCost(cost: number): string {
     return `$${cost.toFixed(2)}`;
 }
-

@@ -24,6 +24,7 @@ type MediaAsset = {
 export default function GalleryPage() {
     const [assets, setAssets] = useState<MediaAsset[]>([]);
     const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);
+    const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set()); // Multi-select state
     const [isLoading, setIsLoading] = useState(true);
     const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'video'>('all');
 
@@ -92,35 +93,60 @@ export default function GalleryPage() {
 
             {/* Gallery grid */}
             <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Media filter tabs */}
-                <div className="flex gap-2 mb-6">
-                    <button
-                        onClick={() => setMediaFilter('all')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'all'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                            }`}
-                    >
-                        All ({assets.length})
-                    </button>
-                    <button
-                        onClick={() => setMediaFilter('image')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'image'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                            }`}
-                    >
-                        Images ({assets.filter(a => a.kind === 'image').length})
-                    </button>
-                    <button
-                        onClick={() => setMediaFilter('video')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'video'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                            }`}
-                    >
-                        Videos ({assets.filter(a => a.kind === 'video').length})
-                    </button>
+                {/* Media filter tabs and multi-select controls */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setMediaFilter('all')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'all'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }`}
+                        >
+                            All ({assets.length})
+                        </button>
+                        <button
+                            onClick={() => setMediaFilter('image')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'image'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }`}
+                        >
+                            Images ({assets.filter(a => a.kind === 'image').length})
+                        </button>
+                        <button
+                            onClick={() => setMediaFilter('video')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mediaFilter === 'video'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }`}
+                        >
+                            Videos ({assets.filter(a => a.kind === 'video').length})
+                        </button>
+                    </div>
+
+                    {/* Multi-select controls */}
+                    <div className="flex items-center gap-3">
+                        {selectedAssets.size > 0 && (
+                            <>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    {selectedAssets.size} selected
+                                </span>
+                                <button
+                                    onClick={() => setSelectedAssets(new Set())}
+                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                >
+                                    Clear
+                                </button>
+                                <Link
+                                    href={`/?imageIds=${Array.from(selectedAssets).join(',')}`}
+                                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                >
+                                    Send {selectedAssets.size} to Chat →
+                                </Link>
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {isLoading ? (
@@ -140,56 +166,85 @@ export default function GalleryPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {assets.filter(asset =>
                             mediaFilter === 'all' || asset.kind === mediaFilter
-                        ).map((asset) => (
-                            <div
-                                key={asset.id}
-                                onClick={() => setSelectedAsset(asset)}
-                                className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer border border-gray-200 dark:border-gray-700"
-                            >
-                                <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative">
-                                    {asset.kind === 'video' ? (
-                                        <>
-                                            <video
-                                                src={getImageUrl(asset.path)}
-                                                className="w-full h-full object-cover"
-                                                preload="metadata"
-                                            />
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                <div className="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
-                                                    <div className="w-0 h-0 border-l-8 border-l-white border-y-6 border-y-transparent ml-1"></div>
+                        ).map((asset) => {
+                            const isSelected = selectedAssets.has(asset.id);
+                            return (
+                                <div
+                                    key={asset.id}
+                                    className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition border border-gray-200 dark:border-gray-700 relative"
+                                >
+                                    {/* Selection checkbox overlay */}
+                                    <div
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const newSelected = new Set(selectedAssets);
+                                            if (isSelected) {
+                                                newSelected.delete(asset.id);
+                                            } else {
+                                                newSelected.add(asset.id);
+                                            }
+                                            setSelectedAssets(newSelected);
+                                        }}
+                                        className="absolute top-2 left-2 z-10 cursor-pointer"
+                                    >
+                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition ${isSelected
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-600'
+                                            }`}>
+                                            {isSelected && <span className="text-sm">✓</span>}
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        onClick={() => setSelectedAsset(asset)}
+                                        className="cursor-pointer"
+                                    >
+                                        <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative">
+                                            {asset.kind === 'video' ? (
+                                                <>
+                                                    <video
+                                                        src={getImageUrl(asset.path)}
+                                                        className="w-full h-full object-cover"
+                                                        preload="metadata"
+                                                    />
+                                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                        <div className="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
+                                                            <div className="w-0 h-0 border-l-8 border-l-white border-y-6 border-y-transparent ml-1"></div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <img
+                                                    src={getImageUrl(asset.path)}
+                                                    alt="Gallery item"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            )}
+                                            {asset.provider === 'google-veo-3.1' && (
+                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                                                    🎬 VIDEO
                                                 </div>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <img
-                                            src={getImageUrl(asset.path)}
-                                            alt="Gallery item"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    )}
-                                    {asset.provider === 'google-veo-3.1' && (
-                                        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                                            🎬 VIDEO
+                                            )}
+                                            {(asset.provider === 'gemini-nano-banana' || asset.provider === 'google-imagen4') && (
+                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                                                    ✨ AI
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                    {(asset.provider === 'gemini-nano-banana' || asset.provider === 'google-imagen4') && (
-                                        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                                            ✨ AI
+                                        <div className="p-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {formatDate(asset.createdAt)}
+                                            </p>
+                                            {asset.actions[0] && (
+                                                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                                                    {asset.actions[0].action}
+                                                </p>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-                                <div className="p-3">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        {formatDate(asset.createdAt)}
-                                    </p>
-                                    {asset.actions[0] && (
-                                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                                            {asset.actions[0].action}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </main>

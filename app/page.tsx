@@ -31,43 +31,96 @@ export default function ChatPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const loadedImageRef = useRef<string | null>(null);
 
-    // Video mode states
-    const [videoMode, setVideoMode] = useState<'text' | 'single-frame'>('text');
+    // Video mode states - Two clear modes: Standard (frame anchors) or Reference (R2V subject consistency)
+    const [videoGenerationMode, setVideoGenerationMode] = useState<'standard' | 'reference'>('standard');
     const [firstFrameId, setFirstFrameId] = useState<string | null>(null);
     const [firstFrameUrl, setFirstFrameUrl] = useState<string | null>(null);
+    const [lastFrameId, setLastFrameId] = useState<string | null>(null);
+    const [lastFrameUrl, setLastFrameUrl] = useState<string | null>(null);
+    const [referenceImageIds, setReferenceImageIds] = useState<string[]>([]);
+    const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([]);
+    const [videoDuration, setVideoDuration] = useState<number>(8);
+    const [videoResolution, setVideoResolution] = useState<'720p' | '1080p'>('1080p');
+    const [generateAudio, setGenerateAudio] = useState<boolean>(true);
 
-    // Handle image from gallery
+    // Handle images from gallery (single or multiple)
     useEffect(() => {
-        const imageId = searchParams.get('imageId');
-        if (imageId && loadedImageRef.current !== imageId) {
-            loadedImageRef.current = imageId;
+        // Check for single imageId (backward compatibility)
+        const singleImageId = searchParams.get('imageId');
 
-            // Fetch the image details to get the path
-            fetch('/api/gallery')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const asset = data.assets.find((a: any) => a.id === imageId);
-                        if (asset) {
-                            setSelectedImage(imageId);
-                            const imageUrl = `/api/media/${asset.path}`;
-                            setSelectedImageUrl(imageUrl);
-                            setMode('edit');
+        // Check for multiple imageIds
+        const multipleIds = searchParams.get('imageIds');
 
-                            // Add as a message in chat for better UX
-                            setMessages(prev => [...prev, {
-                                id: Date.now().toString(),
-                                role: 'assistant',
-                                content: 'Image loaded from gallery. What would you like me to do with it?',
-                                imageUrl,
-                                imageId: asset.id,
-                                saved: true, // Gallery images are already saved
-                                timestamp: new Date(),
-                            }]);
+        const imageIds = multipleIds
+            ? multipleIds.split(',').filter(id => id.trim())
+            : singleImageId
+                ? [singleImageId]
+                : [];
+
+        if (imageIds.length > 0) {
+            const idsKey = imageIds.join(',');
+            if (loadedImageRef.current !== idsKey) {
+                loadedImageRef.current = idsKey;
+
+                // Fetch the image details to get the paths
+                fetch('/api/gallery')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const foundAssets = imageIds
+                                .map(id => data.assets.find((a: any) => a.id === id))
+                                .filter(Boolean);
+
+                            if (foundAssets.length > 0) {
+                                // Add all images as messages in chat
+                                const newMessages: Message[] = [];
+
+                                if (foundAssets.length === 1) {
+                                    // Single image - set as selected for editing
+                                    const asset = foundAssets[0];
+                                    setSelectedImage(asset.id);
+                                    setSelectedImageUrl(`/api/media/${asset.path}`);
+                                    setMode('edit');
+
+                                    newMessages.push({
+                                        id: Date.now().toString(),
+                                        role: 'assistant',
+                                        content: 'Image loaded from gallery. What would you like me to do with it?',
+                                        imageUrl: `/api/media/${asset.path}`,
+                                        imageId: asset.id,
+                                        saved: true,
+                                        timestamp: new Date(),
+                                    });
+                                } else {
+                                    // Multiple images - add to chat and switch to video mode
+                                    newMessages.push({
+                                        id: Date.now().toString(),
+                                        role: 'assistant',
+                                        content: `${foundAssets.length} images loaded from gallery. Select frames for video generation using the buttons below each image.`,
+                                        timestamp: new Date(),
+                                    });
+
+                                    foundAssets.forEach((asset, index) => {
+                                        newMessages.push({
+                                            id: `${Date.now()}-${index}`,
+                                            role: 'assistant',
+                                            content: `Image ${index + 1}`,
+                                            imageUrl: `/api/media/${asset.path}`,
+                                            imageId: asset.id,
+                                            saved: true,
+                                            timestamp: new Date(),
+                                        });
+                                    });
+
+                                    setMode('video'); // Switch to video mode for multi-image
+                                }
+
+                                setMessages(prev => [...prev, ...newMessages]);
+                            }
                         }
-                    }
-                })
-                .catch(err => console.error('Error fetching image:', err));
+                    })
+                    .catch(err => console.error('Error fetching images:', err));
+            }
         }
     }, [searchParams]);
 
@@ -96,14 +149,24 @@ export default function ChatPage() {
                     setLoadingProgress(prev => prev + 10);
                 }, 10000); // Update every 10 seconds
 
+                // Validation for Reference mode
+                if (videoGenerationMode === 'reference' && referenceImageIds.length === 0) {
+                    throw new Error('Reference mode requires at least 1 reference image. Click "+ Reference" on images above.');
+                }
+
                 try {
                     response = await fetch('/api/videos/create', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             prompt: input,
-                            mode: videoMode,
-                            firstFrameId: firstFrameId || undefined,
+                            videoGenerationMode: videoGenerationMode,
+                            firstFrameId: videoGenerationMode === 'standard' ? firstFrameId : undefined,
+                            lastFrameId: videoGenerationMode === 'standard' ? lastFrameId : undefined,
+                            referenceImageIds: videoGenerationMode === 'reference' ? referenceImageIds : undefined,
+                            duration: videoGenerationMode === 'reference' ? 8 : videoDuration,
+                            resolution: videoResolution,
+                            generateAudio: generateAudio,
                         }),
                     });
                 } finally {
@@ -226,7 +289,7 @@ export default function ChatPage() {
                                 Visual Neurons
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                LLM-based image fun!
+                                Prompt. Picture. Video.
                             </p>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -306,17 +369,70 @@ export default function ChatPage() {
                                                             >
                                                                 {selectedImage === message.imageId ? '✓ Selected' : 'Edit This'}
                                                             </button>
-                                                            {mode === 'video' && videoMode === 'single-frame' && (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setFirstFrameId(message.imageId!);
-                                                                        setFirstFrameUrl(message.imageUrl!);
-                                                                    }}
-                                                                    className="text-xs px-2 py-1 bg-purple-600/20 text-purple-600 dark:text-purple-400 rounded hover:bg-purple-600/30 transition"
-                                                                    title="Use as video starting frame"
-                                                                >
-                                                                    Use as Frame
-                                                                </button>
+                                                            {mode === 'video' && (
+                                                                <>
+                                                                    {videoGenerationMode === 'standard' && (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setFirstFrameId(message.imageId!);
+                                                                                    setFirstFrameUrl(message.imageUrl!);
+                                                                                }}
+                                                                                className={`text-xs px-2 py-1 rounded transition ${firstFrameId === message.imageId
+                                                                                    ? 'bg-purple-600 text-white'
+                                                                                    : 'bg-purple-600/20 text-purple-600 dark:text-purple-400 hover:bg-purple-600/30'
+                                                                                    }`}
+                                                                                title="Use as video starting frame"
+                                                                            >
+                                                                                {firstFrameId === message.imageId ? '✓ First' : 'First Frame'}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setLastFrameId(message.imageId!);
+                                                                                    setLastFrameUrl(message.imageUrl!);
+                                                                                }}
+                                                                                className={`text-xs px-2 py-1 rounded transition ${lastFrameId === message.imageId
+                                                                                    ? 'bg-orange-600 text-white'
+                                                                                    : 'bg-orange-600/20 text-orange-600 dark:text-orange-400 hover:bg-orange-600/30'
+                                                                                    }`}
+                                                                                title="Use as video ending frame"
+                                                                            >
+                                                                                {lastFrameId === message.imageId ? '✓ Last' : 'Last Frame'}
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    {videoGenerationMode === 'reference' && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const imageId = message.imageId!;
+                                                                                const imageUrl = message.imageUrl!;
+
+                                                                                if (referenceImageIds.includes(imageId)) {
+                                                                                    // Remove from references
+                                                                                    setReferenceImageIds(prev => prev.filter(id => id !== imageId));
+                                                                                    setReferenceImageUrls(prev => prev.filter(url => url !== imageUrl));
+                                                                                } else if (referenceImageIds.length < 3) {
+                                                                                    // Add to references
+                                                                                    setReferenceImageIds(prev => [...prev, imageId]);
+                                                                                    setReferenceImageUrls(prev => [...prev, imageUrl]);
+                                                                                }
+                                                                            }}
+                                                                            className={`text-xs px-2 py-1 rounded transition ${referenceImageIds.includes(message.imageId!)
+                                                                                ? 'bg-green-600 text-white'
+                                                                                : referenceImageIds.length >= 3
+                                                                                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                                                                    : 'bg-green-600/20 text-green-600 dark:text-green-400 hover:bg-green-600/30'
+                                                                                }`}
+                                                                            title={referenceImageIds.length >= 3 && !referenceImageIds.includes(message.imageId!)
+                                                                                ? 'Maximum 3 reference images'
+                                                                                : 'Add as reference for subject consistency (R2V)'
+                                                                            }
+                                                                            disabled={referenceImageIds.length >= 3 && !referenceImageIds.includes(message.imageId!)}
+                                                                        >
+                                                                            {referenceImageIds.includes(message.imageId!) ? '✓ Ref' : '+ Reference'}
+                                                                        </button>
+                                                                    )}
+                                                                </>
                                                             )}
                                                         </>
                                                     )}
@@ -526,7 +642,7 @@ export default function ChatPage() {
                                     className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
                                 />
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                    Nano Banana <span className="text-xs text-gray-500">(Gemini)</span>
+                                    Nano Banana
                                 </span>
                             </label>
                         </div>
@@ -535,52 +651,252 @@ export default function ChatPage() {
                     {/* Video mode settings - only visible in video mode */}
                     {mode === 'video' && (
                         <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 space-y-4">
+                            {/* Mode Selector */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Video Generation Mode
                                 </label>
-                                <select
-                                    value={videoMode}
-                                    onChange={(e) => setVideoMode(e.target.value as 'text' | 'single-frame')}
-                                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:bg-gray-700 dark:text-white text-sm"
-                                >
-                                    <option value="text">Text Only</option>
-                                    <option value="single-frame">Anchor with 1 Frame</option>
-                                </select>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            value="standard"
+                                            checked={videoGenerationMode === 'standard'}
+                                            onChange={(e) => setVideoGenerationMode(e.target.value as 'standard')}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                                            Standard <span className="text-xs text-gray-500">(frame anchors)</span>
+                                        </span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            value="reference"
+                                            checked={videoGenerationMode === 'reference'}
+                                            onChange={(e) => setVideoGenerationMode(e.target.value as 'reference')}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                                            Reference <span className="text-xs text-gray-500">(R2V subject consistency)</span>
+                                        </span>
+                                    </label>
+                                </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {videoMode === 'text' && 'Generate video from text description only'}
-                                    {videoMode === 'single-frame' && 'Use an image as the starting frame'}
+                                    {videoGenerationMode === 'standard' && 'Control video start/end with optional frame anchors'}
+                                    {videoGenerationMode === 'reference' && 'Generate with consistent character/object appearance (16:9, 8s only)'}
                                 </p>
                             </div>
 
-                            {videoMode === 'single-frame' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Starting Frame
-                                    </label>
-                                    {firstFrameUrl ? (
-                                        <div className="flex items-center gap-2">
-                                            <img src={firstFrameUrl} alt="Starting frame" className="w-20 h-20 object-cover rounded" />
-                                            <button
-                                                onClick={() => {
-                                                    setFirstFrameId(null);
-                                                    setFirstFrameUrl(null);
-                                                }}
-                                                className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
-                                            >
-                                                Remove
-                                            </button>
+                            {/* Standard Mode Options */}
+                            {videoGenerationMode === 'standard' && (
+                                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                    {/* First Frame */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            First Frame (Optional)
+                                        </label>
+                                        {firstFrameUrl ? (
+                                            <div className="flex items-center gap-2">
+                                                <img src={firstFrameUrl} alt="First frame" className="w-20 h-20 object-cover rounded" />
+                                                <button
+                                                    onClick={() => {
+                                                        setFirstFrameId(null);
+                                                        setFirstFrameUrl(null);
+                                                    }}
+                                                    className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Click "First Frame" on any image above
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Last Frame */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Last Frame (Optional)
+                                        </label>
+                                        {lastFrameUrl ? (
+                                            <div className="flex items-center gap-2">
+                                                <img src={lastFrameUrl} alt="Last frame" className="w-20 h-20 object-cover rounded" />
+                                                <button
+                                                    onClick={() => {
+                                                        setLastFrameId(null);
+                                                        setLastFrameUrl(null);
+                                                    }}
+                                                    className="text-xs px-2 py-1 bg-red-500/20 text-red-600 rounded hover:bg-red-500/30"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Click "Last Frame" on any image above
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Duration: {videoDuration}s
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="8"
+                                            value={videoDuration}
+                                            onChange={(e) => setVideoDuration(parseInt(e.target.value))}
+                                            className="w-full"
+                                        />
+                                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                            <span>1s</span>
+                                            <span>8s</span>
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                alert('Please select an image from chat history by clicking "Use as Frame" on any image above');
-                                            }}
-                                            className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-                                        >
-                                            Select Image from Chat
-                                        </button>
-                                    )}
+                                    </div>
+
+                                    {/* Resolution */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Resolution
+                                        </label>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="720p"
+                                                    checked={videoResolution === '720p'}
+                                                    onChange={(e) => setVideoResolution(e.target.value as '720p')}
+                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">720p</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="1080p"
+                                                    checked={videoResolution === '1080p'}
+                                                    onChange={(e) => setVideoResolution(e.target.value as '1080p')}
+                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">1080p</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* Audio */}
+                                    <div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={generateAudio}
+                                                onChange={(e) => setGenerateAudio(e.target.checked)}
+                                                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600 rounded"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                Generate Audio
+                                            </span>
+                                        </label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                                            Context-aware audio synthesis
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reference Mode Options */}
+                            {videoGenerationMode === 'reference' && (
+                                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                    {/* Reference Images */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Reference Images ({referenceImageUrls.length}/3) {referenceImageUrls.length === 0 && <span className="text-red-600">*Required</span>}
+                                        </label>
+                                        {referenceImageUrls.length > 0 ? (
+                                            <div className="flex gap-2 flex-wrap">
+                                                {referenceImageUrls.map((url, index) => (
+                                                    <div key={index} className="relative">
+                                                        <img src={url} alt={`Reference ${index + 1}`} className="w-16 h-16 object-cover rounded" />
+                                                        <button
+                                                            onClick={() => {
+                                                                setReferenceImageIds(prev => prev.filter((_, i) => i !== index));
+                                                                setReferenceImageUrls(prev => prev.filter((_, i) => i !== index));
+                                                            }}
+                                                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Click "+ Reference" on images above for subject consistency
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3">
+                                        <p className="text-xs text-blue-800 dark:text-blue-300">
+                                            <strong>ⓘ R2V Mode Constraints:</strong><br />
+                                            • Duration locked to 8 seconds<br />
+                                            • Aspect ratio locked to 16:9<br />
+                                            • Last frame is ignored in this mode<br />
+                                            • Requires 1-3 reference images
+                                        </p>
+                                    </div>
+
+                                    {/* Resolution */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Resolution
+                                        </label>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="720p"
+                                                    checked={videoResolution === '720p'}
+                                                    onChange={(e) => setVideoResolution(e.target.value as '720p')}
+                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">720p</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="1080p"
+                                                    checked={videoResolution === '1080p'}
+                                                    onChange={(e) => setVideoResolution(e.target.value as '1080p')}
+                                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">1080p</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* Audio */}
+                                    <div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={generateAudio}
+                                                onChange={(e) => setGenerateAudio(e.target.checked)}
+                                                className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600 rounded"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                Generate Audio
+                                            </span>
+                                        </label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+                                            Context-aware audio synthesis
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                         </div>

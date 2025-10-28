@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { generateImage, generateImageWithImagen4 } from '@/lib/gemini';
+import { generateImage, generateImageWithImagen4 } from '@/lib/replicate';
 import { saveMediaFile } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
             console.error('Image generation API error:', geminiError);
 
             // Provide helpful error message
-            if (geminiError.message?.includes('API key')) {
+            if (geminiError.message?.includes('API key') || geminiError.message?.includes('auth')) {
                 return NextResponse.json(
-                    { error: 'Invalid or missing Gemini API key. Please check your .env file.' },
+                    { error: 'Invalid or missing Replicate API key. Please check your .env file.' },
                     { status: 401 }
                 );
             }
