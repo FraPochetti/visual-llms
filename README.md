@@ -74,7 +74,7 @@ A complete image and video generation platform with multiple AI models:
 
 **🆕 Recent Additions:**
 
-**Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select:**
+**Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select + Webhooks:**
 - **Simplified Video UI** - Two clear modes instead of confusing options
   - **Standard Mode**: Frame anchors (first/last optional), flexible duration (1-8s)
   - **Reference Mode (R2V)**: Subject consistency (1-3 ref images required), locked 8s/16:9
@@ -85,6 +85,11 @@ A complete image and video generation platform with multiple AI models:
   - Click checkboxes to select multiple images
   - Send 2-3 images for video with frame anchors or reference consistency
   - Auto-switches to Video mode when loading multiple images
+- **Webhook-Based Video Generation** - Persistent video processing
+  - Videos continue processing even if you refresh or close the page
+  - Auto-saved to gallery when complete
+  - No wasted API credits from page refreshes
+  - Optional: Set WEBHOOK_BASE_URL in .env to enable
 
 **Oct 27, 2025 - Replicate API Migration:**
 - **Migrated to Replicate API** - Single unified API for all models
@@ -139,10 +144,19 @@ nano .env
 # Add your key:
 REPLICATE_API_KEY=your_actual_key_here
 
+# Optional: Add webhook URL for persistent video generation
+# WEBHOOK_BASE_URL=https://your-domain.com
+
 # Save: Ctrl+X, then Y, then Enter
 ```
 
 Get your API key: https://replicate.com/account/api-tokens
+
+**Webhook Setup (Optional):**
+- For persistent video generation that survives page refreshes
+- Development: Use ngrok (`https://your-id.ngrok.io`)
+- Production: Use your domain (`https://visualneurons.com`)
+- If not set, uses synchronous polling (videos lost on refresh)
 
 ### 2. Restart the Server
 
@@ -485,6 +499,42 @@ npx prisma studio
 
 ---
 
+## 🪝 Webhook-Based Video Generation
+
+**How It Works:**
+
+**Without Webhooks (Default):**
+- Video generation blocks until complete
+- If you refresh → video lost, API credits wasted
+- Must wait on the page
+
+**With Webhooks (Recommended):**
+- Set `WEBHOOK_BASE_URL` in `.env`
+- Video starts → returns immediately
+- You can refresh, navigate away, or close browser
+- Video processes in background
+- Webhook saves to gallery automatically when done
+- Check gallery to see completed videos!
+
+**Setup for Development:**
+1. Install ngrok: `npm install -g ngrok`
+2. Start ngrok: `ngrok http 3000`
+3. Copy the HTTPS URL: `https://abc123.ngrok.io`
+4. Add to `.env`: `WEBHOOK_BASE_URL=https://abc123.ngrok.io`
+5. Restart server
+
+**Setup for Production:**
+- Just set `WEBHOOK_BASE_URL=https://yourdomain.com`
+- No ngrok needed
+
+**Benefits:**
+- ✅ Videos complete even if you leave
+- ✅ No wasted credits on refresh
+- ✅ Auto-saved to gallery
+- ✅ Better UX for long generations
+
+---
+
 ## 🔐 Security Notes
 
 **Current Setup (Development):**
@@ -492,6 +542,7 @@ npx prisma studio
 - Port 3000 restricted to your IP
 - API key in `.env` (never committed)
 - Local file storage with session-based access
+- Webhook endpoint validates Replicate payloads
 
 **Before Production:**
 - [ ] Migrate SQLite → PostgreSQL
@@ -500,6 +551,7 @@ npx prisma studio
 - [ ] Enable HTTPS/TLS
 - [ ] Set up domain name
 - [ ] Add rate limiting
+- [ ] Add webhook signature verification
 
 ---
 
@@ -508,22 +560,34 @@ npx prisma studio
 ### API Routes
 
 **POST /api/images/create**
-- Input: `{ prompt: string }`
+- Input: `{ prompt: string, model: string }`
 - Output: Generated image URL + asset ID
 
 **POST /api/images/edit**
 - Input: `{ imageId: string, instruction: string }`
 - Output: Edited image URL + new asset ID
 
+**POST /api/videos/create**
+- Input: `{ prompt, videoGenerationMode, frames, settings }`
+- Output: Video URL + asset ID (or prediction ID if webhook mode)
+
+**POST /api/webhooks/replicate**
+- Webhook endpoint for Replicate predictions
+- Auto-saves completed videos to gallery
+
+**GET /api/predictions/[id]**
+- Check status of video generation
+- Returns: prediction status, asset when complete
+
 **POST /api/images/save**
 - Input: FormData with image file
 - Output: Saved asset info
 
 **GET /api/gallery**
-- Output: List of all session's images
+- Output: List of all session's media
 
 **GET /api/media/[sessionId]/[filename]**
-- Serves image files securely
+- Serves media files securely
 
 ### Database Schema
 
@@ -737,8 +801,8 @@ sessions {
 media_assets {
   id: UUID (primary key)
   owner: UUID (session FK)
-  kind: "image"
-  provider: "local-fs" | "gemini-nano-banana"
+  kind: "image" | "video"
+  provider: "local-fs" | "gemini-nano-banana" | "google-imagen4" | "google-veo-3.1"
   path: String (relative to /var/visualneurons/media/)
   bytes: Integer
   width: Integer
@@ -752,10 +816,25 @@ media_assets {
 actions {
   id: UUID (primary key)
   userId: UUID (session FK)
-  action: "create" | "edit" | "upload"
+  action: "create" | "edit" | "upload" | "create_video"
   assetId: UUID (media asset FK)
   detail: JSON string
   createdAt: DateTime
+}
+
+-- Predictions (webhook-based generation)
+predictions {
+  id: UUID (primary key)
+  predictionId: String (Replicate prediction ID, unique)
+  owner: UUID (session FK)
+  type: "image" | "video"
+  status: "processing" | "succeeded" | "failed"
+  prompt: String
+  metadata: JSON string
+  assetId: UUID (links to media asset when complete)
+  error: String (error message if failed)
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 ```
 

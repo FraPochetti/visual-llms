@@ -173,6 +173,74 @@ export default function ChatPage() {
                 } finally {
                     clearInterval(progressInterval);
                 }
+
+                const data = await response.json();
+
+                // Check if webhook mode is being used
+                if (data.useWebhook && data.predictionId) {
+                    console.log('Webhook mode: polling for prediction status');
+
+                    // Show processing message
+                    setMessages(prev => [...prev, {
+                        id: Date.now().toString(),
+                        role: 'assistant',
+                        content: `🎬 Video generation started! Processing in background...\n\nYou can safely refresh or navigate away. The video will appear in your gallery when complete.\n\nPrediction ID: ${data.predictionId.substring(0, 8)}...`,
+                        timestamp: new Date(),
+                    }]);
+
+                    // Poll our API for status
+                    const pollPrediction = async () => {
+                        const statusResponse = await fetch(`/api/predictions/${data.predictionId}`);
+                        const statusData = await statusResponse.json();
+
+                        if (statusData.success) {
+                            if (statusData.prediction.status === 'succeeded' && statusData.asset) {
+                                // Video is ready!
+                                setMessages(prev => [...prev, {
+                                    id: Date.now().toString(),
+                                    role: 'assistant',
+                                    content: 'Video generated successfully! Auto-saved to gallery.',
+                                    videoUrl: `/api/media/${statusData.asset.path}`,
+                                    videoId: statusData.asset.id,
+                                    mediaType: 'video',
+                                    saved: true,
+                                    timestamp: new Date(),
+                                }]);
+                                setIsLoading(false);
+                                return true; // Done
+                            } else if (statusData.prediction.status === 'failed') {
+                                setMessages(prev => [...prev, {
+                                    id: Date.now().toString(),
+                                    role: 'assistant',
+                                    content: `Video generation failed: ${statusData.prediction.error || 'Unknown error'}`,
+                                    timestamp: new Date(),
+                                }]);
+                                setIsLoading(false);
+                                return true; // Done (failed)
+                            }
+                        }
+                        return false; // Still processing
+                    };
+
+                    // Poll every 10 seconds
+                    const pollInterval = setInterval(async () => {
+                        const isDone = await pollPrediction();
+                        if (isDone) {
+                            clearInterval(pollInterval);
+                        }
+                    }, 10000);
+
+                    // Check immediately once
+                    const isDone = await pollPrediction();
+                    if (isDone) {
+                        clearInterval(pollInterval);
+                    }
+
+                    setIsLoading(false);
+                    return; // Exit early for webhook mode
+                }
+
+                // Fall through to synchronous mode handling
             } else if (mode === 'create') {
                 response = await fetch('/api/images/create', {
                     method: 'POST',

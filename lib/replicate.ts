@@ -215,6 +215,8 @@ export async function editImage(
  * - With first frame (image-to-video)
  * - With last frame (video-to-image)
  * - With reference images (up to 3 for subject consistency)
+ * 
+ * @param useWebhook - If true, returns prediction ID instead of waiting. Webhook will handle completion.
  */
 export async function generateVideo(
     prompt: string,
@@ -226,13 +228,15 @@ export async function generateVideo(
         resolution?: '720p' | '1080p'; // Video resolution
         aspectRatio?: '16:9';        // Aspect ratio (16:9 required for reference images)
         generateAudio?: boolean;     // Generate audio (default true)
+        webhookUrl?: string;         // If provided, use webhook instead of polling
         onProgress?: (seconds: number) => void;
     }
 ): Promise<{
-    videoData: Buffer;
+    videoData?: Buffer;
     mimeType: string;
     duration: number;
     resolution: string;
+    predictionId?: string;  // Returned when using webhooks
 }> {
     try {
         console.log('Starting video generation with Veo 3.1 via Replicate...');
@@ -281,13 +285,22 @@ export async function generateVideo(
         console.log('Starting Veo 3.1 prediction...');
         console.log('Input keys:', Object.keys(input));
         console.log('Input values:', JSON.stringify(input, null, 2).substring(0, 500));
+        console.log('Webhook URL:', options?.webhookUrl || 'none (polling mode)');
 
         let prediction;
         try {
-            prediction = await replicate.predictions.create({
+            const createParams: any = {
                 model: 'google/veo-3.1',
                 input: input,
-            });
+            };
+
+            // Add webhook if provided
+            if (options?.webhookUrl) {
+                createParams.webhook = options.webhookUrl;
+                createParams.webhook_events_filter = ["completed"]; // Only notify when done
+            }
+
+            prediction = await replicate.predictions.create(createParams);
         } catch (createError: any) {
             console.error('Error creating prediction:', createError);
             console.error('Error details:', JSON.stringify(createError, null, 2));
@@ -295,6 +308,17 @@ export async function generateVideo(
         }
 
         console.log('Video generation started:', prediction.id);
+
+        // If webhook mode, return prediction ID immediately
+        if (options?.webhookUrl) {
+            console.log('Webhook mode: returning prediction ID immediately');
+            return {
+                predictionId: prediction.id,
+                mimeType: 'video/mp4',
+                duration: options?.duration || 8,
+                resolution: options?.resolution || '1080p',
+            };
+        }
 
         // Poll for completion
         let currentPrediction = prediction;

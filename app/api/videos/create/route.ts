@@ -84,6 +84,14 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // Check if webhook URL is configured
+        const useWebhook = !!process.env.WEBHOOK_BASE_URL;
+        const webhookUrl = useWebhook
+            ? `${process.env.WEBHOOK_BASE_URL}/api/webhooks/replicate`
+            : undefined;
+
+        console.log('Using webhook:', useWebhook, webhookUrl);
+
         // Generate video with Veo 3.1
         let videoResult;
         try {
@@ -98,6 +106,7 @@ export async function POST(request: NextRequest) {
                 resolution: resolution as '720p' | '1080p',
                 aspectRatio: videoGenerationMode === 'reference' ? '16:9' : undefined, // Lock to 16:9 for reference mode
                 generateAudio: generateAudio,
+                webhookUrl: webhookUrl, // Use webhook if configured
             });
         } catch (geminiError: any) {
             console.error('Video generation API error:', geminiError);
@@ -127,7 +136,44 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        // Save video to local storage
+        // If webhook mode, create prediction record and return immediately
+        if (useWebhook && videoResult.predictionId) {
+            console.log('Webhook mode: creating prediction record');
+
+            const predictionRecord = await prisma.prediction.create({
+                data: {
+                    predictionId: videoResult.predictionId,
+                    owner: sessionId,
+                    type: 'video',
+                    status: 'processing',
+                    prompt: prompt,
+                    metadata: JSON.stringify({
+                        videoGenerationMode,
+                        firstFrameId: videoGenerationMode === 'standard' ? (firstFrameId || null) : null,
+                        lastFrameId: videoGenerationMode === 'standard' ? (lastFrameId || null) : null,
+                        referenceImageIds: videoGenerationMode === 'reference' ? (referenceImageIds || []) : [],
+                        duration: videoGenerationMode === 'reference' ? 8 : duration,
+                        resolution,
+                        aspectRatio: videoGenerationMode === 'reference' ? '16:9' : 'auto',
+                        generateAudio,
+                    }),
+                },
+            });
+
+            return NextResponse.json({
+                success: true,
+                message: 'Video generation started! Processing in background...',
+                predictionId: predictionRecord.id,
+                status: 'processing',
+                useWebhook: true,
+            });
+        }
+
+        // Synchronous mode: video is already complete
+        if (!videoResult.videoData) {
+            throw new Error('Video data missing in synchronous mode');
+        }
+
         const relativePath = await saveVideo(sessionId, videoResult.videoData);
 
         // Create database record
