@@ -37,18 +37,27 @@ export async function GET() {
         const calculateStats = (assets: typeof allAssets) => {
             const imagen4Count = assets.filter(a => a.provider === 'google-imagen4').length;
             const nanoBananaCount = assets.filter(a => a.provider === 'gemini-nano-banana').length;
+            const qwenCount = assets.filter(a => a.provider === 'qwen-image-edit-plus').length;
+            const seedEdit3Count = assets.filter(a => a.provider === 'seededit-3.0').length;
+            const seedream4Count = assets.filter(a => a.provider === 'seedream-4').length;
             const veo31Count = assets.filter(a => a.provider === 'google-veo-3.1').length;
 
             const imagen4Cost = calculateCost('google-imagen4', imagen4Count);
             const nanoBananaCost = calculateCost('gemini-nano-banana', nanoBananaCount);
+            const qwenCost = calculateCost('qwen-image-edit-plus', qwenCount);
+            const seedEdit3Cost = calculateCost('seededit-3.0', seedEdit3Count);
+            const seedream4Cost = calculateCost('seedream-4', seedream4Count);
             const veo31Cost = calculateCost('google-veo-3.1', veo31Count);
 
             return {
                 imagen4: imagen4Count,
                 nanoBanana: nanoBananaCount,
+                qwenImageEditPlus: qwenCount,
+                seedEdit3: seedEdit3Count,
+                seedream4: seedream4Count,
                 veo31: veo31Count,
-                total: imagen4Count + nanoBananaCount + veo31Count,
-                cost: imagen4Cost + nanoBananaCost + veo31Cost,
+                total: imagen4Count + nanoBananaCount + qwenCount + seedEdit3Count + seedream4Count + veo31Count,
+                cost: imagen4Cost + nanoBananaCost + qwenCost + seedEdit3Cost + seedream4Cost + veo31Cost,
             };
         };
 

@@ -7,6 +7,9 @@ import { formatCost } from '@/lib/pricing';
 type PeriodStats = {
     imagen4: number;
     nanoBanana: number;
+    qwenImageEditPlus: number;
+    seedEdit3: number;
+    seedream4: number;
     veo31: number;
     total: number;
     cost: number;
@@ -73,6 +76,36 @@ export default function UsagePage() {
                             </span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.nanoBanana} {period.nanoBanana === 1 ? 'op' : 'ops'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/qwen/qwen-image-edit-plus" target="_blank" className="underline hover:text-blue-600">
+                                    Qwen Image Edit+
+                                </Link>:
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {period.qwenImageEditPlus} {period.qwenImageEditPlus === 1 ? 'edit' : 'edits'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/bytedance/seededit-3.0" target="_blank" className="underline hover:text-blue-600">
+                                    SeedEdit 3.0
+                                </Link>:
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {period.seedEdit3} {period.seedEdit3 === 1 ? 'edit' : 'edits'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/bytedance/seedream-4" target="_blank" className="underline hover:text-blue-600">
+                                    Seedream 4
+                                </Link>:
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {period.seedream4} {period.seedream4 === 1 ? 'op' : 'ops'}
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
@@ -176,6 +209,27 @@ export default function UsagePage() {
                                             Nano Banana
                                         </Link>:
                                     </strong> ≈$0.039 per 1024×1024 image
+                                </p>
+                                <p>
+                                    <strong>
+                                        <Link href="https://replicate.com/qwen/qwen-image-edit-plus" target="_blank" className="underline hover:text-blue-600">
+                                            Qwen Image Edit Plus
+                                        </Link>:
+                                    </strong> $0.03 per output image
+                                </p>
+                                <p>
+                                    <strong>
+                                        <Link href="https://replicate.com/bytedance/seededit-3.0" target="_blank" className="underline hover:text-blue-600">
+                                            SeedEdit 3.0
+                                        </Link>:
+                                    </strong> $0.03 per output image
+                                </p>
+                                <p>
+                                    <strong>
+                                        <Link href="https://replicate.com/bytedance/seedream-4" target="_blank" className="underline hover:text-blue-600">
+                                            Seedream 4
+                                        </Link>:
+                                    </strong> $0.03 per output image
                                 </p>
                                 <p>
                                     <strong>

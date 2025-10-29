@@ -18,18 +18,22 @@ type Message = {
     timestamp: Date;
 };
 
+type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4';
+
 export default function ChatPage() {
     const searchParams = useSearchParams();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [mode, setMode] = useState<'create' | 'edit' | 'video'>('create');
     const [selectedModel, setSelectedModel] = useState<'imagen4' | 'nano-banana'>('imagen4');
+    const [selectedEditModel, setSelectedEditModel] = useState<EditModel>('nano-banana');
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState<number>(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const loadedImageRef = useRef<string | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Video mode states - Two clear modes: Standard (frame anchors) or Reference (R2V subject consistency)
     const [videoGenerationMode, setVideoGenerationMode] = useState<'standard' | 'reference'>('standard');
@@ -43,6 +47,7 @@ export default function ChatPage() {
     const [videoResolution, setVideoResolution] = useState<'720p' | '1080p'>('1080p');
     const [generateAudio, setGenerateAudio] = useState<boolean>(true);
     const [showVideoOptions, setShowVideoOptions] = useState<boolean>(false); // Collapse by default to save space
+    const [showEditModelOptions, setShowEditModelOptions] = useState<boolean>(false); // Collapse edit model selector
 
     // Handle images from gallery (single or multiple)
     useEffect(() => {
@@ -151,6 +156,11 @@ export default function ChatPage() {
             const toSave = messages.slice(-100);
             localStorage.setItem('visual-neurons-chat-history', JSON.stringify(toSave));
         }
+    }, [messages]);
+
+    // Auto-scroll to bottom when messages change
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
     // Clear chat history
@@ -294,7 +304,7 @@ export default function ChatPage() {
                 response = await fetch('/api/images/edit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imageId: selectedImage, instruction: input }),
+                    body: JSON.stringify({ imageId: selectedImage, instruction: input, model: selectedEditModel }),
                 });
             }
 
@@ -687,6 +697,8 @@ export default function ChatPage() {
                             </div>
                         </div>
                     )}
+                    {/* Invisible element to scroll to */}
+                    <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input area */}
@@ -766,6 +778,93 @@ export default function ChatPage() {
                                     Nano Banana
                                 </span>
                             </label>
+                        </div>
+                    )}
+
+                    {/* Editing model selector - only visible in edit mode */}
+                    {mode === 'edit' && (
+                        <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    Model: <span className="font-medium">
+                                        {selectedEditModel === 'nano-banana' && 'Nano Banana'}
+                                        {selectedEditModel === 'qwen-image-edit-plus' && 'Qwen Image Edit Plus'}
+                                        {selectedEditModel === 'seededit-3.0' && 'SeedEdit 3.0'}
+                                        {selectedEditModel === 'seedream-4' && 'Seedream 4'}
+                                    </span>
+                                </span>
+                                <button
+                                    onClick={() => setShowEditModelOptions(!showEditModelOptions)}
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                >
+                                    {showEditModelOptions ? '▼ Hide Models' : '▶ Change Model'}
+                                </button>
+                            </div>
+                            
+                            {showEditModelOptions && (
+                                <div className="grid gap-2 sm:grid-cols-2 mt-3">
+                                    <label className={`flex items-center gap-2 px-3 py-2 rounded border transition cursor-pointer ${selectedEditModel === 'nano-banana'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400'}`}>
+                                        <input
+                                            type="radio"
+                                            value="nano-banana"
+                                            checked={selectedEditModel === 'nano-banana'}
+                                            onChange={(e) => setSelectedEditModel(e.target.value as EditModel)}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <div>
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">Nano Banana</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">Best likeness preservation</div>
+                                        </div>
+                                    </label>
+                                    <label className={`flex items-center gap-2 px-3 py-2 rounded border transition cursor-pointer ${selectedEditModel === 'qwen-image-edit-plus'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400'}`}>
+                                        <input
+                                            type="radio"
+                                            value="qwen-image-edit-plus"
+                                            checked={selectedEditModel === 'qwen-image-edit-plus'}
+                                            onChange={(e) => setSelectedEditModel(e.target.value as EditModel)}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <div>
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">Qwen Image Edit Plus</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">ControlNet & multi-image aware</div>
+                                        </div>
+                                    </label>
+                                    <label className={`flex items-center gap-2 px-3 py-2 rounded border transition cursor-pointer ${selectedEditModel === 'seededit-3.0'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400'}`}>
+                                        <input
+                                            type="radio"
+                                            value="seededit-3.0"
+                                            checked={selectedEditModel === 'seededit-3.0'}
+                                            onChange={(e) => setSelectedEditModel(e.target.value as EditModel)}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <div>
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">SeedEdit 3.0</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">Targeted adjustments & detail retention</div>
+                                        </div>
+                                    </label>
+                                    <label className={`flex items-center gap-2 px-3 py-2 rounded border transition cursor-pointer ${selectedEditModel === 'seedream-4'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400'}`}>
+                                        <input
+                                            type="radio"
+                                            value="seedream-4"
+                                            checked={selectedEditModel === 'seedream-4'}
+                                            onChange={(e) => setSelectedEditModel(e.target.value as EditModel)}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <div>
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">Seedream 4</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">High-res creative editing up to 4K</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
                         </div>
                     )}
 

@@ -16,6 +16,18 @@ export const API_PRICING = {
     // Estimated: ~$0.05 per image (based on GPU time)
     NANO_BANANA: 0.05,
 
+    // Qwen Image Edit Plus on Replicate
+    // Pricing: $0.03 per output image
+    QWEN_IMAGE_EDIT_PLUS: 0.03,
+
+    // SeedEdit 3.0 on Replicate
+    // Pricing: $0.03 per output image
+    SEEDEDIT_3_0: 0.03,
+
+    // Seedream 4 on Replicate
+    // Pricing: $0.03 per output image
+    SEEDREAM_4: 0.03,
+
     // Veo 3.1 on Replicate
     // Estimated: ~$4.00 per 8-second video (based on GPU time)
     VEO_3_1_PER_VIDEO: 4.00,
@@ -42,6 +54,15 @@ export function calculateCost(
     } else if (provider === 'gemini-nano-banana') {
         // Nano Banana on Replicate
         return count * API_PRICING.NANO_BANANA;
+    } else if (provider === 'qwen-image-edit-plus') {
+        // Qwen Image Edit Plus on Replicate
+        return count * API_PRICING.QWEN_IMAGE_EDIT_PLUS;
+    } else if (provider === 'seededit-3.0') {
+        // SeedEdit 3.0 on Replicate
+        return count * API_PRICING.SEEDEDIT_3_0;
+    } else if (provider === 'seedream-4') {
+        // Seedream 4 on Replicate
+        return count * API_PRICING.SEEDREAM_4;
     } else if (provider === 'google-veo-3.1') {
         // Veo 3.1 on Replicate
         return count * API_PRICING.VEO_3_1_PER_VIDEO;

@@ -52,6 +52,23 @@ function extractUrlFromOutput(rawOutput: any): string | null {
     return null;
 }
 
+export type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4';
+
+async function downloadImageFromUrl(url: string): Promise<{ imageData: string; mimeType: string; }> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    return {
+        imageData: buffer.toString('base64'),
+        mimeType: response.headers.get('content-type') || 'image/png',
+    };
+}
+
 /**
  * Generate an image from a text prompt using Imagen 4 Ultra via Replicate
  * Uses google/imagen-4-ultra model
@@ -151,59 +168,133 @@ export async function generateImage(prompt: string): Promise<{
     }
 }
 
+async function editImageWithNano(dataUri: string, instruction: string): Promise<{ imageData: string; mimeType: string; }> {
+    const output = await replicate.run(
+        'google/nano-banana',
+        {
+            input: {
+                image_input: [dataUri],
+                prompt: instruction,
+            }
+        }
+    ) as any;
+
+    console.log('Nano Banana edit output type:', typeof output);
+    console.log('Nano Banana edit output:', JSON.stringify(output).substring(0, 200));
+
+    const resolvedUrl = extractUrlFromOutput(output);
+    if (!resolvedUrl) {
+        console.error('Unexpected output structure:', output);
+        throw new Error('Unable to resolve edited image URL from Nano Banana output');
+    }
+
+    return downloadImageFromUrl(resolvedUrl);
+}
+
+async function editImageWithQwen(dataUri: string, instruction: string): Promise<{ imageData: string; mimeType: string; }> {
+    const output = await replicate.run(
+        'qwen/qwen-image-edit-plus',
+        {
+            input: {
+                prompt: instruction,
+                image: [dataUri],
+                output_format: 'png',
+                output_quality: 95,
+                go_fast: true,
+            }
+        }
+    ) as any;
+
+    console.log('Qwen edit output type:', typeof output);
+    console.log('Qwen edit output:', JSON.stringify(output).substring(0, 200));
+
+    const resolvedUrl = extractUrlFromOutput(output);
+    if (!resolvedUrl) {
+        console.error('Unexpected Qwen output structure:', output);
+        throw new Error('Unable to resolve edited image URL from Qwen Image Edit Plus output');
+    }
+
+    return downloadImageFromUrl(resolvedUrl);
+}
+
+async function editImageWithSeedEdit(dataUri: string, instruction: string): Promise<{ imageData: string; mimeType: string; }> {
+    const output = await replicate.run(
+        'bytedance/seededit-3.0',
+        {
+            input: {
+                image: dataUri,
+                prompt: instruction,
+                guidance_scale: 7.5,
+            }
+        }
+    ) as any;
+
+    console.log('SeedEdit 3.0 output type:', typeof output);
+    console.log('SeedEdit 3.0 output:', JSON.stringify(output).substring(0, 200));
+
+    const resolvedUrl = extractUrlFromOutput(output);
+    if (!resolvedUrl) {
+        console.error('Unexpected SeedEdit 3.0 output structure:', output);
+        throw new Error('Unable to resolve edited image URL from SeedEdit 3.0 output');
+    }
+
+    return downloadImageFromUrl(resolvedUrl);
+}
+
+async function editImageWithSeedream(dataUri: string, instruction: string): Promise<{ imageData: string; mimeType: string; }> {
+    const output = await replicate.run(
+        'bytedance/seedream-4',
+        {
+            input: {
+                prompt: instruction,
+                image_input: [dataUri],  // Seedream 4 uses image_input array (supports 1-10 images)
+                size: '2K',
+            }
+        }
+    ) as any;
+
+    console.log('Seedream 4 output type:', typeof output);
+    console.log('Seedream 4 output:', JSON.stringify(output).substring(0, 200));
+
+    const resolvedUrl = extractUrlFromOutput(output);
+    if (!resolvedUrl) {
+        console.error('Unexpected Seedream 4 output structure:', output);
+        throw new Error('Unable to resolve edited image URL from Seedream 4 output');
+    }
+
+    return downloadImageFromUrl(resolvedUrl);
+}
+
 /**
- * Edit an existing image using Nano Banana via Replicate
- * Maintains consistent likenesses and supports advanced edits
+ * Edit an existing image using selected Replicate model
  */
 export async function editImage(
     imageBuffer: Buffer,
     instruction: string,
-    mimeType: string = 'image/png'
+    mimeType: string = 'image/png',
+    model: EditModel = 'nano-banana'
 ): Promise<{
     imageData: string;
     mimeType: string;
 }> {
     try {
-        // Convert buffer to base64 data URI for Replicate
         const imageBase64 = imageBuffer.toString('base64');
         const dataUri = `data:${mimeType};base64,${imageBase64}`;
 
-        const output = await replicate.run(
-            'google/nano-banana',
-            {
-                input: {
-                    image_input: [dataUri],
-                    prompt: instruction,
-                }
-            }
-        ) as any;
-
-        console.log('Nano Banana edit output type:', typeof output);
-        console.log('Nano Banana edit output:', JSON.stringify(output).substring(0, 200));
-
-        // Replicate returns URLs or objects; extract a usable URL
-        const resolvedUrl = extractUrlFromOutput(output);
-        if (!resolvedUrl) {
-            console.error('Unexpected output structure:', output);
-            throw new Error('Unable to resolve edited image URL from Nano Banana output');
+        switch (model) {
+            case 'nano-banana':
+                return await editImageWithNano(dataUri, instruction);
+            case 'qwen-image-edit-plus':
+                return await editImageWithQwen(dataUri, instruction);
+            case 'seededit-3.0':
+                return await editImageWithSeedEdit(dataUri, instruction);
+            case 'seedream-4':
+                return await editImageWithSeedream(dataUri, instruction);
+            default:
+                throw new Error(`Unsupported edit model: ${model}`);
         }
-
-        // Download the edited image from URL
-        const response = await fetch(resolvedUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to download edited image: ${response.statusText}`);
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const imageData = buffer.toString('base64');
-
-        return {
-            imageData,
-            mimeType: 'image/png',
-        };
     } catch (error) {
-        console.error('Error editing image with Nano Banana:', error);
+        console.error(`Error editing image with model ${model}:`, error);
         throw error;
     }
 }

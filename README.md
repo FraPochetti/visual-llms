@@ -1,6 +1,6 @@
 # Visual Neurons
 
-A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nano Banana** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
+A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
 
 **Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API
 
@@ -22,12 +22,15 @@ A complete image and video generation platform with multiple AI models:
 **✅ Replicate API Integration:**
 - Single `replicate` npm package for all models
 - Unified API interface across all Google models
-- **Triple model support via Replicate:**
+- **Expanded model support via Replicate:**
   - **Imagen 4 Ultra** (`google/imagen-4-ultra`) - Highest-fidelity image generation (default)
   - **Nano Banana** (`google/nano-banana`) - Alternative generation + editing
+  - **Qwen Image Edit Plus** (`qwen/qwen-image-edit-plus`) - ControlNet-aware editing with strong instruction following
+  - **SeedEdit 3.0** (`bytedance/seededit-3.0`) - Detail-preserving targeted edits (lighting, object removal, style swaps)
+  - **Seedream 4** (`bytedance/seedream-4`) - Unified generation & editing with high-resolution output up to 4K
   - **Veo 3.1** (`google/veo-3.1`) - Cinematic video generation with native audio
 - Text-to-image generation with model selection
-- Image editing with instruction prompts (Nano Banana only)
+- Image editing with instruction prompts across four models (Nano Banana default, plus Qwen Image Edit Plus, SeedEdit 3.0, Seedream 4)
 - **Video generation** with multiple modes:
   - Text-to-video
   - Image-to-video (first frame anchor)
@@ -41,8 +44,10 @@ A complete image and video generation platform with multiple AI models:
 - Beautiful chat interface with dark mode support
 - Create/Edit/Video mode toggle
 - Inline image and video display in chat
+- Auto-scroll to bottom when new content is added or when navigating back to chat
 - Click images to view full size, videos play with controls
 - Frame selection for video generation
+- Collapsible model selectors to save screen space
 - Loading states with progress tracking (videos)
 - Animations and transitions
 
@@ -58,6 +63,8 @@ A complete image and video generation platform with multiple AI models:
 
 **✅ Smart Features:**
 - **Chat persistence**: History saved to localStorage, survives refreshes
+- **Auto-scroll to bottom**: Chat automatically scrolls to show latest messages and images
+- **Multi-model editing**: Choose from 4 editing models with collapsible selector to save space
 - **Iterative editing**: Each edit builds on the previous result
 - **Undo edits**: Click "← Previous" to revert to earlier version
 - **Save button**: Choose which images to keep
@@ -75,6 +82,29 @@ A complete image and video generation platform with multiple AI models:
 - AI badge not showing on Imagen 4 generated images
 
 **🆕 Recent Additions:**
+
+**Oct 29, 2025 - Multi-Model Image Editing + UX Improvements:**
+- **4 Image Editing Models** - Expanded from Nano Banana only to 4 powerful options
+  - **Nano Banana** (default) - Best likeness preservation, reliable all-rounder
+  - **Qwen Image Edit Plus** - ControlNet-aware, multi-image consistency support
+  - **SeedEdit 3.0** - Detail-preserving targeted edits (lighting, removals, style swaps)
+  - **Seedream 4** - High-resolution creative editing up to 4K (2K default)
+  - Collapsible model selector to save screen space - click "▶ Change Model" to expand
+  - Each model optimized with proper API parameters for best results
+- **Auto-scroll to Bottom** - Chat automatically scrolls to latest message
+  - Smooth scroll when new images/videos are generated
+  - Auto-scroll when navigating back from Gallery or Usage pages
+  - Always see your latest creations without manual scrolling
+- **Usage Dashboard Enhanced** - Now tracks all 4 editing models
+  - Individual counters for each model with clickable links to documentation
+  - Accurate pricing: Qwen, SeedEdit, and Seedream all $0.03/image
+  - Comprehensive cost tracking across all operations
+
+**Oct 29, 2025 - Custom Favicon:**
+- **Removed annoying Next.js "N" favicon** - Replaced with custom "VN" icon
+  - Created `app/icon.tsx` with purple gradient "VN" badge
+  - Uses Next.js built-in icon generation (ImageResponse)
+  - No more default Next.js boilerplate icon!
 
 **Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select + Webhooks + Chat Persistence:**
 - **Simplified Video UI** - Two clear modes instead of confusing options
@@ -121,7 +151,7 @@ A complete image and video generation platform with multiple AI models:
 - **Imagen 4 integration** - Dual model support for image generation
 - Model selection UI with radio buttons (Create mode only)  
 - Imagen 4 set as default for new image generation
-- Nano Banana remains exclusive for image editing
+- Nano Banana remains the default for image editing, with Qwen Image Edit Plus, SeedEdit 3.0, and Seedream 4 available from the Edit mode selector
 - **Select any image for editing** - "Edit This" button on every image in chat
   - Blue ring highlight shows selected image
   - Automatically switches to Edit mode
@@ -134,6 +164,9 @@ A complete image and video generation platform with multiple AI models:
 **Model Quick Comparison:**
 - **[Imagen 4 Ultra](https://replicate.com/google/imagen-4-ultra)**: ⭐⭐⭐⭐⭐ generation, ❌ editing, 2K resolution (2048×2048), highest-quality photorealistic images (~$0.08/image via Replicate)
 - **[Nano Banana](https://replicate.com/google/nano-banana)**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, 1024×1024 default, best for creative variations (~$0.05/image via Replicate)
+- **[Qwen Image Edit Plus](https://replicate.com/qwen/qwen-image-edit-plus)**: ⭐⭐⭐⭐⭐ editing, ControlNet-aware multi-image consistency, configurable output formats (webp/png) with quality tuning ($0.03 per output image via Replicate)
+- **[SeedEdit 3.0](https://replicate.com/bytedance/seededit-3.0)**: ⭐⭐⭐⭐⭐ editing, excellent at precise modifications like lighting tweaks, removals, and style conversions while preserving details ($0.03 per output image via Replicate)
+- **[Seedream 4](https://replicate.com/bytedance/seedream-4)**: ⭐⭐⭐⭐⭐ generation & editing, unified workflow supporting up to 4K resolution and style transfers ($0.03 per output image via Replicate)
 - **[Veo 3.1](https://replicate.com/google/veo-3.1)**: ⭐⭐⭐⭐⭐ video generation, 8s videos, 720p/1080p, native audio, cinematic quality (~$4.00/video via Replicate)
 
 ---
@@ -196,11 +229,16 @@ npm run dev
 ### Edit Images
 1. Select **"Edit selected"** mode
 2. Upload an image (or select from gallery)
-3. **Image appears in chat** - natural conversation flow!
-4. Describe the change: *"Make the sky purple and add stars"*
-5. Click **Send**
-6. Nano Banana maintains likenesses while editing
-7. **Chain edits**: After each edit, you can continue editing the result!
+3. **Pick an editing model** - Click "▶ Change Model" to expand selector (Nano Banana default, or switch to Qwen Image Edit Plus, SeedEdit 3.0, or Seedream 4)
+4. **Image appears in chat** - natural conversation flow!
+5. Describe the change: *"Make the sky purple and add stars"*
+6. Click **Send**
+7. Model quick guide:
+   - *Nano Banana* – great all-rounder, strongest at maintaining likenesses
+   - *Qwen Image Edit Plus* – best when you need ControlNet guidance or multi-image consistency
+   - *SeedEdit 3.0* – excels at precise adjustments (lighting, removals, style tweaks)
+   - *Seedream 4* – choose for high-res edits or rich style transfers up to 4K
+8. **Chain edits**: After each edit, you can continue editing the result!
    - *"Now add a sunset"*
    - *"Make it more vibrant"*
    - Each edit builds on the previous result
@@ -264,7 +302,7 @@ npm run dev
   - Click **"Send X to Chat →"** to load all selected items at once
   - Automatically switches to Video mode when loading multiple images
 - **AI-generated content** shows badges:
-  - **✨ AI** for images (Imagen 4 / Nano Banana)
+- **✨ AI** for images (Imagen 4 / Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4)
   - **🎬 VIDEO** for Veo 3.1 videos
 - **User-uploaded images** have no badge
 - Click any item for details and metadata
@@ -285,7 +323,7 @@ npm run dev
   - **All Time** - Total usage since you started
 - **Breakdown by model:**
   - Imagen 4 operations and cost
-  - Nano Banana operations and cost
+- Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4 operations and cost
   - Total operations and estimated cost in USD
 - **Replicate pricing used:**
   - Imagen 4 Ultra: ~$0.08 per image (GPU time-based)
@@ -360,7 +398,7 @@ visual-llms/
 - Imagen 4 is the default and should work out of the box
 - If you get errors, verify your Replicate API key is valid
 - Try switching to Nano Banana model if Imagen 4 has issues
-- Image editing always uses Nano Banana (works reliably)
+- Image editing defaults to Nano Banana but you can switch to Qwen Image Edit Plus, SeedEdit 3.0, or Seedream 4 if you need different strengths
 - Check Replicate dashboard for model availability
 
 ### Server won't start
@@ -394,13 +432,17 @@ npx prisma studio
 
 **✅ Fully Implemented:**
 - ✅ Chat interface with create/edit/video modes
-- ✅ **Triple model support:**
+- ✅ **Expanded model support:**
   - ✅ Imagen 4 for high-fidelity image generation
-- ✅ Nano Banana for generation + editing
+  - ✅ Nano Banana for generation + editing
+  - ✅ Qwen Image Edit Plus for ControlNet-aware editing
+  - ✅ SeedEdit 3.0 for detail-preserving targeted edits
+  - ✅ Seedream 4 for unified high-resolution generation & editing
   - ✅ Veo 3.1 for cinematic video generation with audio
-- ✅ Model selection UI (radio buttons in Create mode)
+- ✅ Model selection UI (radio buttons in Create mode & collapsible multi-model selector in Edit mode)
 - ✅ Image generation from text prompts (Imagen 4 or Nano Banana)
-- ✅ Image editing with natural language instructions (Nano Banana)
+- ✅ Image editing with natural language instructions across four models
+- ✅ Auto-scroll to bottom for seamless navigation back to latest content
 - ✅ **Video generation** with Veo 3.1 (text-to-video or image-to-video)
 - ✅ Frame selection from chat history
 - ✅ Progress tracking for video generation
@@ -445,11 +487,26 @@ npx prisma studio
 - Speed: Fast generation (~5-10 seconds)
 - Cost: $0.06 per image (Ultra tier - same price for 1K or 2K!)
 
-**Nano Banana (Alternative for Creation + Only Option for Editing):**
-- Best for: Creative variations and image editing
+**Nano Banana (Default for Editing & Alternative for Creation):**
+- Best for: Creative variations and everyday edits
 - Strengths: Maintains subject likeness, follows instructions well
-- Use when: You want multimodal capabilities or need to edit images
+- Use when: You want multimodal capabilities or quick edits without extra configuration
 - Speed: Moderate generation
+
+**Qwen Image Edit Plus (ControlNet & Multi-Image Editing):**
+- Best for: Edits that need structure guidance (edges, depth) or multi-image consistency
+- Strengths: Native ControlNet support, adjustable quality/output format, fast iterations when `go_fast` is enabled
+- Use when: You need to align edits with sketches, depth maps, or keep multiple shots in sync
+
+**SeedEdit 3.0 (Detail-Preserving Adjustments):**
+- Best for: Lighting tweaks, object removal/addition, outfit changes, and subtle style conversion
+- Strengths: High fidelity to the original photo while applying precise changes
+- Use when: You want to modify specific regions while keeping the base image intact
+
+**Seedream 4 (High-Resolution Style & Re-Imagining):**
+- Best for: High-res edits, style transfers, or re-imagining concepts up to 4K
+- Strengths: Unified generate/edit workflow, strong prompt adherence, flexible aesthetics
+- Use when: You need upscale edits, cinematic re-styling, or want to iterate toward final production-quality assets
 
 **Veo 3.1 (Video Generation):**
 - Best for: Cinematic videos with realistic motion and audio
@@ -474,10 +531,14 @@ npx prisma studio
 - Specify details: lighting, mood, composition, colors
 - Imagen 4 Ultra excels at: Architecture, landscapes, portraits, product photography with superior detail
 
-**For Image Editing (Nano Banana only):**
+**For Image Editing (Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4):**
 - Be clear and direct: *"Change the shirt color to red"*
-- One change at a time works best
-- Nano Banana excels at maintaining facial features and identity
+- One change at a time still works best; chain edits to iterate
+- Choose the model that matches your goal:
+  - *Nano Banana* – likeness preservation and general-purpose edits
+  - *Qwen Image Edit Plus* – ControlNet conditioning or structured multi-image edits
+  - *SeedEdit 3.0* – precise adjustments with minimal collateral changes
+  - *Seedream 4* – stylistic transformations and high-resolution reworks
 
 **For Video Generation (Veo 3.1):**
 - Describe the scene: *"A serene beach at sunset, waves gently rolling onto shore"*
@@ -663,6 +724,9 @@ python test_veo3.py
 - **Replicate Models:**
   - **Imagen 4 Ultra:** https://replicate.com/google/imagen-4-ultra
   - **Nano Banana:** https://replicate.com/google/nano-banana
+  - **Qwen Image Edit Plus:** https://replicate.com/qwen/qwen-image-edit-plus
+  - **SeedEdit 3.0:** https://replicate.com/bytedance/seededit-3.0
+  - **Seedream 4:** https://replicate.com/bytedance/seedream-4
   - **Veo 3.1:** https://replicate.com/google/veo-3.1
 - **Replicate Pricing:** https://replicate.com/pricing
 - **Next.js Docs:** https://nextjs.org/docs
@@ -676,7 +740,7 @@ python test_veo3.py
 
 1. **Chat Interface** - Natural language conversation
 2. **Create Mode** - Text prompts → Images (via `gemini-2.5-flash-image`)
-3. **Edit Mode** - Images + Instructions → Edited Images (Nano Banana)
+3. **Edit Mode** - Images + Instructions → Edited Images (Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4)
 4. **Gallery** - View, organize, and re-edit saved images
 5. **Session-Based** - No login required, cookie-based sessions
 6. **Local-First** - All data stored on your server
