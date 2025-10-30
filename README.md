@@ -100,11 +100,11 @@ A complete image and video generation platform with multiple AI models:
   - Accurate pricing: Qwen, SeedEdit, and Seedream all $0.03/image
   - Comprehensive cost tracking across all operations
 
-**Oct 29, 2025 - Custom Favicon:**
-- **Removed annoying Next.js "N" favicon** - Replaced with custom "VN" icon
-  - Created `app/icon.tsx` with purple gradient "VN" badge
-  - Uses Next.js built-in icon generation (ImageResponse)
-  - No more default Next.js boilerplate icon!
+**Oct 29, 2025 - Custom Bike Favicon:**
+- **Replaced Next.js "N" favicon** - Now using custom green bike icon
+  - Added `app/icon.png` with green circular bike/ofo-style logo
+  - Clean, modern branding for Visual Neurons
+  - Instantly recognizable in browser tabs!
 
 **Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select + Webhooks + Chat Persistence:**
 - **Simplified Video UI** - Two clear modes instead of confusing options
