@@ -13,10 +13,18 @@ A complete creative AI platform with **image and video generation**: **Imagen 4*
 1. [Quick Start (Local Development)](#-quick-start-local-development)
 2. [Production Deployment](#-production-deployment)
 3. [How It Works (Architecture)](#-how-it-works-architecture)
-4. [Using the App](#-using-the-app)
-5. [Commands Reference](#-commands-reference)
-6. [Troubleshooting](#-troubleshooting)
-7. [Features & Models](#-features--models)
+4. [Development vs Production Modes](#-development-vs-production-modes)
+5. [Using the App](#-using-the-app)
+6. [Commands Reference](#-commands-reference)
+7. [Troubleshooting](#-troubleshooting)
+8. [Features & Models](#-features--models)
+9. [Advanced Topics](#-advanced-topics)
+   - SSH Tunneling
+   - Database Management
+   - Session Management & Data Migration
+   - Backup & Restore
+10. [API Reference](#-api-reference)
+11. [Deployment Journey & Lessons Learned](#-deployment-journey--lessons-learned)
 
 ---
 
@@ -895,6 +903,132 @@ npx prisma migrate dev --name your_migration_name
 npx prisma generate
 ```
 
+### Session Management & Data Migration
+
+**Understanding Sessions:**
+
+The app uses **session-based data isolation** - each session sees only its own media. This is how Prisma partitions data:
+
+```typescript
+// Every media asset has an owner (session ID)
+model MediaAsset {
+  owner String  // Session ID - partitions all data!
+  ...
+}
+
+// Gallery queries filter by session
+const media = await prisma.mediaAsset.findMany({
+  where: { 
+    owner: currentSessionId,  // Only shows this session's media
+    saved: true 
+  }
+});
+```
+
+**When You Might Need Migration:**
+
+If you switch from:
+- `localhost:3000` → `visualneurons.com` (different cookies!)
+- Old session → New Cognito session
+- Development → Production
+
+Your old media will "disappear" (it's still in the database, just tied to the old session).
+
+**How to Find Your Sessions:**
+
+```bash
+# Install sqlite3 if not already installed
+sudo apt install sqlite3
+
+# View all sessions and their media counts
+sqlite3 /var/visualneurons/db.sqlite "
+SELECT 
+  owner as session_id, 
+  COUNT(*) as total_media,
+  SUM(CASE WHEN saved=1 THEN 1 ELSE 0 END) as saved_count
+FROM media_assets 
+GROUP BY owner;
+"
+
+# View session details
+sqlite3 /var/visualneurons/db.sqlite "
+SELECT id, createdAt, lastSeen 
+FROM sessions 
+ORDER BY createdAt;
+"
+```
+
+**Migrate Data Between Sessions:**
+
+```bash
+# Step 1: Identify your sessions
+# Old session (localhost): 7cb4ebb0-e7a2-417d-9cd3-250dfd48e52c
+# New session (Cognito): 951aa917-632d-412c-af69-2ac9b5575e80
+
+# Step 2: Migrate media assets
+sqlite3 /var/visualneurons/db.sqlite "
+UPDATE media_assets 
+SET owner = 'NEW_SESSION_ID' 
+WHERE owner = 'OLD_SESSION_ID';
+"
+
+# Step 3: Migrate action logs
+sqlite3 /var/visualneurons/db.sqlite "
+UPDATE actions 
+SET userId = 'NEW_SESSION_ID' 
+WHERE userId = 'OLD_SESSION_ID';
+"
+
+# Step 4: Verify migration
+sqlite3 /var/visualneurons/db.sqlite "
+SELECT owner, COUNT(*) as count 
+FROM media_assets 
+GROUP BY owner;
+"
+
+# Step 5: Refresh your browser - old media appears in gallery!
+```
+
+**Real Example (What We Did):**
+
+```bash
+# Found two sessions:
+# - Old: 7cb4ebb0-e7a2-417d-9cd3-250dfd48e52c (81 media files, 20 saved)
+# - New: 951aa917-632d-412c-af69-2ac9b5575e80 (9 media files)
+
+# Migrated old → new:
+sqlite3 /var/visualneurons/db.sqlite "
+UPDATE media_assets 
+SET owner = '951aa917-632d-412c-af69-2ac9b5575e80' 
+WHERE owner = '7cb4ebb0-e7a2-417d-9cd3-250dfd48e52c';
+"
+
+sqlite3 /var/visualneurons/db.sqlite "
+UPDATE actions 
+SET userId = '951aa917-632d-412c-af69-2ac9b5575e80' 
+WHERE userId = '7cb4ebb0-e7a2-417d-9cd3-250dfd48e52c';
+"
+
+# Result: New session now has 90 media files (81 + 9)!
+```
+
+**Why This Design?**
+
+Session-based partitioning enables:
+- ✅ Multi-user support (each user sees only their media)
+- ✅ Privacy by default (no data leakage)
+- ✅ Easy scaling (add Cognito users, data stays isolated)
+- ✅ Works with both cookie sessions AND authenticated users
+
+**Alternative Approach:**
+
+For true single-user apps, you could modify the code to skip session filtering, but the current design:
+- Is more flexible
+- Supports future growth
+- Migration is a one-time task
+
+---
+
 ### Backup & Restore
 
 ```bash
@@ -1084,6 +1218,156 @@ This app includes:
 - Webhook support for async processing
 
 **All running on a single EC2 instance with simple, maintainable architecture!** 🚀
+
+---
+
+## 🎓 Deployment Journey & Lessons Learned
+
+**This section documents the real deployment experience - useful for blog posts and understanding production challenges.**
+
+### The Problem-Solving Journey
+
+**1. Login Issues with Cognito**
+
+**Initial Problem:**
+- Login failed with `SECRET_HASH was not received` error
+- User in `FORCE_CHANGE_PASSWORD` state couldn't log in
+
+**Root Cause:**
+- App Client created with "Traditional web application" type generates a client secret
+- JavaScript apps don't use client secrets - caused authentication failure
+
+**Solution:**
+- Created new App Client as "Single-page application (SPA)" type
+- No client secret generated
+- Updated `.env` with new Client ID
+
+**Key Learning:** Choose the right Cognito app client type! SPA for JavaScript apps, Traditional for server-side apps.
+
+---
+
+**2. Password Change Challenge**
+
+**Initial Problem:**
+- Users in `FORCE_CHANGE_PASSWORD` status couldn't log in
+- App just showed error instead of handling the challenge
+
+**Solution:**
+- Enhanced `lib/auth-client.ts` to return password challenge instead of rejecting
+- Added password change form to login page
+- Implemented `completeNewPassword()` function
+- Now handles first-login password changes seamlessly
+
+**Files Changed:**
+- `lib/auth-client.ts` - Added `NewPasswordChallenge` type and `completeNewPassword()` function
+- `app/login/page.tsx` - Added password change form UI with validation
+
+**Key Learning:** AWS Cognito challenges must be handled in the UI, not just on the backend.
+
+---
+
+**3. Logging in Production**
+
+**Initial Problem:**
+- No logs visible when running `npm start` (production mode)
+- Difficult to debug issues
+
+**Evolution:**
+1. **Tried:** Custom logger writing to `logs/app.log` - worked but added complexity
+2. **Tried:** PM2 with enhanced logging - still too quiet
+3. **Final Solution:** Use `npm run dev` via screen session
+
+**Why This Works:**
+- `npm run dev` outputs everything to stdout
+- Screen captures all output in one place
+- Hot reload eliminates need for rebuilds
+- Perfect for single-user scenarios
+
+**Key Learning:** For single-user deployments, dev mode + screen is simpler than production mode + PM2.
+
+---
+
+**4. Session Data Migration**
+
+**Initial Problem:**
+- After switching from localhost to visualneurons.com, gallery was empty
+- Old images and videos "disappeared"
+
+**Root Cause:**
+- Session-based data isolation in Prisma
+- Different domain = different cookie = different session
+- Each session only sees its own media (by design)
+
+**Solution:**
+```bash
+# Found old and new session IDs
+sqlite3 /var/visualneurons/db.sqlite "SELECT owner, COUNT(*) FROM media_assets GROUP BY owner;"
+
+# Migrated all data to new session
+UPDATE media_assets SET owner = 'NEW_ID' WHERE owner = 'OLD_ID';
+UPDATE actions SET userId = 'NEW_ID' WHERE userId = 'OLD_ID';
+```
+
+**Key Learning:** Session-based isolation is powerful for multi-user support but requires migration when switching authentication methods.
+
+---
+
+### Final Architecture Decisions
+
+**What We Chose:**
+- ✅ **Screen + npm run dev** (not PM2 + npm start)
+- ✅ **Dev mode in production** (for single-user simplicity)
+- ✅ **Nginx reverse proxy** (for HTTPS and security)
+- ✅ **Session-based isolation** (keeps multi-user option open)
+
+**Why These Choices Work:**
+
+1. **Screen is simpler than PM2:**
+   - One command to start/stop
+   - All logs in one place
+   - No config files needed
+   - Perfect for development workflow
+
+2. **Dev mode gives better DX:**
+   - Hot reload = instant feedback
+   - Full logs = easy debugging
+   - No build step = faster iteration
+   - Performance doesn't matter for 1 user
+
+3. **Nginx still crucial:**
+   - Handles SSL/HTTPS
+   - Professional production setup
+   - Protects Node.js from direct exposure
+   - Easy to add caching/load balancing later
+
+4. **Session isolation future-proof:**
+   - Can add more Cognito users easily
+   - Data stays private per user
+   - Migration is simple SQL commands
+   - Supports scaling when needed
+
+---
+
+### Files Removed During Simplification
+
+As we simplified the setup, we removed:
+- ✅ `ecosystem.config.js` - PM2 config (switched to screen)
+- ✅ `lib/logger.ts` - Custom logger (use screen logs instead)
+- ✅ `logs/pm2-*.log` - PM2 log files (not needed)
+- ✅ `logs/app.log` - Custom log file (not needed)
+- ✅ Custom logging code from API routes (kept simple console.error for actual errors)
+
+**Result:** Simpler codebase, fewer moving parts, easier maintenance.
+
+---
+
+### Common Gotchas & Solutions
+
+1. **Client Secret Error:** Use SPA app client type, not Traditional
+2. **Silent Logs:** Use dev mode or custom logger (we chose dev mode)
+3. **Empty Gallery:** Migrate session data with SQL
+4. **Port 3000 Security:** Either close it or restrict to your IP only
+5. **Hot Reload Not Working:** Make sure you're running `npm run dev`, not `npm start`
 
 ---
 
