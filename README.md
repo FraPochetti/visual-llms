@@ -4,176 +4,25 @@ A complete creative AI platform with **image and video generation**: **Imagen 4*
 
 **Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API
 
-**Status:** ✅ Fully functional and production-ready! All core features including video generation implemented and tested.
+**Status:** ✅ Fully functional and production-ready with AWS Cognito authentication!
 
 ---
 
-## 🎉 What's in This App
+## 📖 Table of Contents
 
-A complete image and video generation platform with multiple AI models:
-
-**✅ Core Infrastructure:**
-- Complete Next.js 15 setup with App Router
-- TypeScript + Tailwind CSS + Prisma ORM
-- SQLite database with 3 tables (sessions, media_assets, actions)
-- Local file storage at `/var/visualneurons/media/`
-- HTTP-only session cookies (no login required)
-
-**✅ Replicate API Integration:**
-- Single `replicate` npm package for all models
-- Unified API interface across all Google models
-- **Expanded model support via Replicate:**
-  - **Imagen 4 Ultra** (`google/imagen-4-ultra`) - Highest-fidelity image generation (default)
-  - **Nano Banana** (`google/nano-banana`) - Alternative generation + editing
-  - **Qwen Image Edit Plus** (`qwen/qwen-image-edit-plus`) - ControlNet-aware editing with strong instruction following
-  - **SeedEdit 3.0** (`bytedance/seededit-3.0`) - Detail-preserving targeted edits (lighting, object removal, style swaps)
-  - **Seedream 4** (`bytedance/seedream-4`) - Unified generation & editing with high-resolution output up to 4K
-  - **Veo 3.1** (`google/veo-3.1`) - Cinematic video generation with native audio
-- Text-to-image generation with model selection
-- Image editing with instruction prompts across four models (Nano Banana default, plus Qwen Image Edit Plus, SeedEdit 3.0, Seedream 4)
-- **Video generation** with multiple modes:
-  - Text-to-video
-  - Image-to-video (first frame anchor)
-  - Video with last frame (ending anchor)
-  - Reference images (up to 3 for subject consistency)
-  - Configurable duration and resolution
-- Async prediction handling with polling
-- Comprehensive error handling
-
-**✅ User Interface:**
-- Beautiful chat interface with dark mode support
-- Create/Edit/Video mode toggle
-- Inline image and video display in chat
-- Auto-scroll to bottom when new content is added or when navigating back to chat
-- Click images to view full size, videos play with controls
-- Frame selection for video generation
-- Collapsible model selectors to save screen space
-- Loading states with progress tracking (videos)
-- Animations and transitions
-
-**✅ Gallery System:**
-- Grid view of saved images and videos
-- Media type filtering (All/Images/Videos)
-- AI badges and video indicators
-- Detail modal with metadata (duration, resolution, FPS for videos)
-- Send to Chat functionality
-- Download media to computer
-- Delete media with confirmation
-- Only shows explicitly saved media (no auto-save clutter)
-
-**✅ Smart Features:**
-- **Chat persistence**: History saved to localStorage, survives refreshes
-- **Auto-scroll to bottom**: Chat automatically scrolls to show latest messages and images
-- **Multi-model editing**: Choose from 4 editing models with collapsible selector to save space
-- **Iterative editing**: Each edit builds on the previous result
-- **Undo edits**: Click "← Previous" to revert to earlier version
-- **Save button**: Choose which images to keep
-- **Image chaining**: "Add scarf" → "Make it red" → "Now add a hat"
-- **No duplicates**: Intelligent loading from gallery
-- **Session isolation**: Each user's images are private
-- **Clear Chat**: Reset conversation anytime with one click
-
-**🐛 Bugs Fixed:**
-- React hydration warning from browser extensions
-- Gallery showing all images instead of only saved ones
-- Image editing using wrong (first) image instead of latest
-- Duplicate images when loading from gallery
-- AI badges on user-uploaded images
-- AI badge not showing on Imagen 4 generated images
-
-**🆕 Recent Additions:**
-
-**Oct 29, 2025 - Multi-Model Image Editing + UX Improvements:**
-- **4 Image Editing Models** - Expanded from Nano Banana only to 4 powerful options
-  - **Nano Banana** (default) - Best likeness preservation, reliable all-rounder
-  - **Qwen Image Edit Plus** - ControlNet-aware, multi-image consistency support
-  - **SeedEdit 3.0** - Detail-preserving targeted edits (lighting, removals, style swaps)
-  - **Seedream 4** - High-resolution creative editing up to 4K (2K default)
-  - Collapsible model selector to save screen space - click "▶ Change Model" to expand
-  - Each model optimized with proper API parameters for best results
-- **Auto-scroll to Bottom** - Chat automatically scrolls to latest message
-  - Smooth scroll when new images/videos are generated
-  - Auto-scroll when navigating back from Gallery or Usage pages
-  - Always see your latest creations without manual scrolling
-- **Usage Dashboard Enhanced** - Now tracks all 4 editing models
-  - Individual counters for each model with clickable links to documentation
-  - Accurate pricing: Qwen, SeedEdit, and Seedream all $0.03/image
-  - Comprehensive cost tracking across all operations
-
-**Oct 29, 2025 - Custom Bike Favicon:**
-- **Replaced Next.js "N" favicon** - Now using custom green bike icon
-  - Added `app/icon.png` with green circular bike/ofo-style logo
-  - Clean, modern branding for Visual Neurons
-  - Instantly recognizable in browser tabs!
-
-**Oct 28, 2025 - Video UI Simplification + Gallery Multi-Select + Webhooks + Chat Persistence:**
-- **Simplified Video UI** - Two clear modes instead of confusing options
-  - **Standard Mode**: Frame anchors (first/last optional), flexible duration (1-8s)
-  - **Reference Mode (R2V)**: Subject consistency (1-3 ref images required), locked 8s/16:9
-  - Mode-specific button visibility (no more confusion!)
-  - Locked settings when required by API
-  - **Collapsible options** - Click "Show/Hide Options" to save screen space on smaller devices
-- **Gallery Multi-Select** - Load multiple images to chat at once
-  - Click checkboxes to select multiple images
-  - Send 2-3 images for video with frame anchors or reference consistency
-  - Auto-switches to Video mode when loading multiple images
-- **Webhook-Based Video Generation** - Persistent video processing
-  - Videos continue processing even if you refresh or close the page
-  - Auto-saved to gallery when complete
-  - No wasted API credits from page refreshes
-  - Optional: Set WEBHOOK_BASE_URL in .env to enable
-- **Chat History Persistence** - Never lose your work
-  - Chat history saved to localStorage automatically
-  - Survives page refreshes and navigation
-  - Keeps last 100 messages
-  - "Clear Chat" button to reset when needed
-
-**Oct 27, 2025 - Replicate API Migration:**
-- **Migrated to Replicate API** - Single unified API for all models
-  - Replaced Google SDKs with Replicate npm package
-  - All models now accessed through Replicate's platform
-  - Simplified API key management (one key for everything)
-  - Better webhook support and async handling
-- **Updated pricing** - Cost tracking based on Replicate's pricing model
-  - Hardware-based pricing (GPU time)
-  - More accurate cost estimates
-  - Transparent prediction metrics
-
-**Oct 19, 2025:**
-            - **Veo 3.1 Video Generation** - Full video creation with 2 modes
-  - Text-to-video: Generate 8-second videos from prompts
-  - Image-to-video: Use image as starting frame
-  - Native audio generation (automatic)
-  - 720p/1080p resolution at 24fps
-  - SynthID watermarking
-  - Progress tracking (11s-6min generation time)
-  - Frame selection from chat history
-- **Imagen 4 integration** - Dual model support for image generation
-- Model selection UI with radio buttons (Create mode only)  
-- Imagen 4 set as default for new image generation
-- Nano Banana remains the default for image editing, with Qwen Image Edit Plus, SeedEdit 3.0, and Seedream 4 available from the Edit mode selector
-- **Select any image for editing** - "Edit This" button on every image in chat
-  - Blue ring highlight shows selected image
-  - Automatically switches to Edit mode
-  - Perfect for comparing models then editing your preferred result
-- **Usage & Costs Dashboard** - Track API spending and operations
-  - Time periods: Today, This Week, This Month, All Time
-  - Breakdown by model with estimated costs
-  - Based on Replicate pricing
-
-**Model Quick Comparison:**
-- **[Imagen 4 Ultra](https://replicate.com/google/imagen-4-ultra)**: ⭐⭐⭐⭐⭐ generation, ❌ editing, 2K resolution (2048×2048), highest-quality photorealistic images (~$0.08/image via Replicate)
-- **[Nano Banana](https://replicate.com/google/nano-banana)**: ⭐⭐⭐⭐ generation, ⭐⭐⭐⭐⭐ editing, 1024×1024 default, best for creative variations (~$0.05/image via Replicate)
-- **[Qwen Image Edit Plus](https://replicate.com/qwen/qwen-image-edit-plus)**: ⭐⭐⭐⭐⭐ editing, ControlNet-aware multi-image consistency, configurable output formats (webp/png) with quality tuning ($0.03 per output image via Replicate)
-- **[SeedEdit 3.0](https://replicate.com/bytedance/seededit-3.0)**: ⭐⭐⭐⭐⭐ editing, excellent at precise modifications like lighting tweaks, removals, and style conversions while preserving details ($0.03 per output image via Replicate)
-- **[Seedream 4](https://replicate.com/bytedance/seedream-4)**: ⭐⭐⭐⭐⭐ generation & editing, unified workflow supporting up to 4K resolution and style transfers ($0.03 per output image via Replicate)
-- **[Veo 3.1](https://replicate.com/google/veo-3.1)**: ⭐⭐⭐⭐⭐ video generation, 8s videos, 720p/1080p, native audio, cinematic quality (~$4.00/video via Replicate)
+1. [Quick Start (Local Development)](#-quick-start-local-development)
+2. [Production Deployment](#-production-deployment)
+3. [How It Works (Architecture)](#-how-it-works-architecture)
+4. [Using the App](#-using-the-app)
+5. [Commands Reference](#-commands-reference)
+6. [Troubleshooting](#-troubleshooting)
+7. [Features & Models](#-features--models)
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Development)
 
-Your app is **fully set up** (server currently stopped). To start:
+For local development without authentication:
 
 ### 1. Add Your Replicate API Key
 
@@ -184,24 +33,14 @@ nano .env
 # Add your key:
 REPLICATE_API_KEY=your_actual_key_here
 
-# Optional: Add webhook URL for persistent video generation
-# WEBHOOK_BASE_URL=https://your-domain.com
-
 # Save: Ctrl+X, then Y, then Enter
 ```
 
 Get your API key: https://replicate.com/account/api-tokens
 
-**Webhook Setup (Optional):**
-- For persistent video generation that survives page refreshes
-- Development: Use ngrok (`https://your-id.ngrok.io`)
-- Production: Use your domain (`https://visualneurons.com`)
-- If not set, uses synchronous polling (videos lost on refresh)
-
-### 2. Restart the Server
+### 2. Start the Server
 
 ```bash
-pkill -f "next dev"
 npm run dev
 ```
 
@@ -210,16 +49,350 @@ npm run dev
 - **Local:** http://localhost:3000
 - **Remote:** http://YOUR_EC2_IP:3000
 
-> ⚠️ Make sure port 3000 is open in your AWS Security Group
+> ⚠️ Make sure port 3000 is open in your AWS Security Group for remote access
 
 ---
 
-## ✨ How to Use
+## 🔐 Production Deployment
+
+Complete guide to deploy Visual Neurons to **visualneurons.com** with AWS Cognito authentication, nginx, and SSL.
+
+### Prerequisites
+
+Before you start, you'll need:
+- ✅ AWS Account with Cognito access
+- ✅ EC2 instance running Ubuntu
+- ✅ Domain name (e.g., `visualneurons.com`) in Route53
+- ✅ AWS CLI configured on EC2
+- ✅ EC2 Public IP address
+
+---
+
+### Step 1: AWS Cognito Setup ⚙️
+
+**Create User Pool:**
+
+1. Go to [AWS Console → Cognito → User Pools](https://console.aws.amazon.com/cognito/users/)
+2. Click **"Create user pool"**
+3. Configure as follows:
+
+   **Authentication providers:**
+   - Sign-in options: ✅ **Username only** (uncheck email)
+
+   **Security requirements:**
+   - Password policy: Default
+   - MFA: **No MFA**
+
+   **Sign-up experience:**
+   - ⚠️ **CRITICAL:** Self-registration: **DISABLED**
+
+   **Message delivery:**
+   - Skip (not needed)
+
+   **Integrate your app:**
+   - User pool name: `visual-neurons-users`
+   - App client name: `visual-neurons-web`
+   - Client secret: **Don't generate** ⚠️ (IMPORTANT!)
+   - Authentication flows: ✅ **ALLOW_USER_PASSWORD_AUTH**, ✅ **ALLOW_REFRESH_TOKEN_AUTH**
+
+4. Click **"Create user pool"**
+
+5. **Copy these values:**
+   - User Pool ID: (looks like `us-east-1_XXXXXXXXX`)
+   - Region: (e.g., `us-east-1`)
+   - App Client ID: (under "App integration" tab)
+
+**Important Note about Client Secret:**
+- If you accidentally create an app client WITH a client secret, you'll get errors like `SECRET_HASH was not received`
+- Solution: Create a new app client (go to App Integration → Create app client) and select **"Single-page application (SPA)"** type
+- This ensures no client secret is generated
+
+---
+
+### Step 2: Configure Environment Variables 📝
+
+```bash
+cd /home/ubuntu/visual-llms
+cp .env.example .env
+nano .env
+```
+
+Add your Cognito values from Step 1:
+
+```bash
+REPLICATE_API_KEY=your_existing_replicate_key
+
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
+NEXT_PUBLIC_COGNITO_CLIENT_ID=your_client_id_here
+NEXT_PUBLIC_COGNITO_REGION=us-east-1
+
+# Optional: Enable for persistent video generation
+WEBHOOK_BASE_URL=https://visualneurons.com
+```
+
+Save and exit (Ctrl+X, Y, Enter)
+
+---
+
+### Step 3: Start the App with Screen 🚀
+
+**Simple Development Setup (Perfect for single-user):**
+
+This runs `npm run dev` in a screen session, giving you:
+- ✅ Instant hot reload - no rebuilding needed!
+- ✅ All logs in one place - just like running locally
+- ✅ See code changes immediately
+- ✅ Stays running even when you disconnect
+
+```bash
+cd /home/ubuntu/visual-llms
+
+# Start the app in a screen session
+screen -dmS visualneurons npm run dev
+
+# Verify it's running
+screen -ls
+curl http://localhost:3000
+```
+
+**That's it!** The app is now running on `localhost:3000`
+
+**Note:** No need to run `npm run build` when you make changes! Just edit your code and refresh the browser.
+
+---
+
+### Step 4: Configure AWS Route53 🌐
+
+1. Go to [Route53 Console](https://console.aws.amazon.com/route53/v2/hostedzones)
+2. Find your hosted zone for `visualneurons.com`
+3. Create/Update A record:
+   - **Record name:** leave blank (for root domain)
+   - **Record type:** A
+   - **Value:** Your EC2 Public IP
+   - **TTL:** 300
+4. Click **"Create records"**
+
+**Get your EC2 Public IP:**
+```bash
+curl -4 ifconfig.me
+```
+
+Wait 1-5 minutes for DNS propagation. Test with:
+```bash
+dig visualneurons.com
+```
+
+---
+
+### Step 5: Configure Security Group 🔒
+
+Ensure your EC2 security group allows:
+
+| Port | Protocol | Source | Purpose |
+|------|----------|--------|---------|
+| 22 | TCP | Your IP | SSH |
+| 80 | TCP | 0.0.0.0/0 | HTTP (for Let's Encrypt) |
+| 443 | TCP | 0.0.0.0/0 | HTTPS (production traffic) |
+| 3000 | TCP | Your IP (optional) | Direct dev access |
+
+**Important:** Port 3000 should either be:
+- ❌ Completely closed (most secure - nginx handles everything)
+- ✅ Restricted to your IP only (for testing/debugging)
+- ❌ **NEVER** open to 0.0.0.0/0 (security risk!)
+
+---
+
+### Step 6: Install Nginx 🌐
+
+```bash
+cd /home/ubuntu/visual-llms
+sudo bash scripts/setup-nginx.sh
+```
+
+This will:
+- Install nginx
+- Copy configuration
+- Enable the site
+- Restart nginx
+
+---
+
+### Step 7: Get SSL Certificate 🔐
+
+**Wait for DNS propagation first!** Test with `dig visualneurons.com`
+
+```bash
+sudo bash scripts/setup-ssl.sh
+```
+
+When prompted:
+- Enter your email for renewal notices
+- Agree to terms
+- Choose whether to redirect HTTP → HTTPS (recommended: Yes)
+
+---
+
+### Step 8: Create Your User 👤
+
+Configure AWS CLI (if not already done):
+```bash
+aws configure
+```
+
+You'll need:
+- AWS Access Key ID
+- AWS Secret Access Key
+- Region (same as your User Pool, e.g., `us-east-1`)
+
+Create your admin user:
+```bash
+bash scripts/create-cognito-user.sh
+```
+
+Enter:
+- User Pool ID (from Step 1)
+- Your username
+- Temporary password
+
+**Note:** The app handles password changes automatically! On first login, you'll be prompted to set a new password directly in the web interface.
+
+---
+
+### Step 9: Test Everything! ✅
+
+1. **Visit your site:** https://visualneurons.com
+2. **You should be redirected to `/login`**
+3. **Login with your credentials:**
+   - Username: (what you created)
+   - Password: (temporary password)
+   - You'll be prompted to change your password on first login
+4. **Test the app:**
+   - Generate an image
+   - Edit an image
+   - View gallery
+   - Check usage page
+   - Logout and login again
+
+**🎉 Congratulations! You're deployed!**
+
+---
+
+## 🏗️ How It Works (Architecture)
+
+Understanding the complete flow from your browser to your app:
+
+### The Flow
+
+```
+Your Browser
+    ↓
+https://visualneurons.com (port 443)
+    ↓
+AWS Route53 DNS (resolves domain to your EC2 IP)
+    ↓
+AWS Security Group (firewall - allows ports 22, 80, 443)
+    ↓
+Nginx (on EC2, listening on ports 80/443)
+  • Handles SSL/TLS certificates (the padlock 🔒)
+  • Acts as reverse proxy
+  • Forwards requests to localhost:3000
+    ↓
+Next.js App (on EC2, localhost:3000)
+  • Running in screen session
+  • npm run dev (hot reload enabled!)
+  • AWS Cognito authentication
+  • Generates images/videos
+    ↓
+Response flows back up through Nginx to your browser
+```
+
+### Key Points
+
+**Everything runs on the same EC2 instance:**
+- ✅ Nginx and Next.js on the same machine
+- ✅ `localhost:3000` means "only accessible from this machine"
+- ✅ Nginx forwards traffic from port 443 → localhost:3000 internally
+- ✅ Users never directly access port 3000
+
+**Why Nginx?**
+- Handles HTTPS/SSL certificates
+- Protects Node.js from direct internet exposure
+- Better security and performance
+- Professional production setup
+
+**Why Screen + npm run dev?**
+- Simple - just one command to start
+- Hot reload - edit code, refresh browser, see changes!
+- Full logs - everything in one place
+- No build step - instant feedback
+- Perfect for single-user/development setups
+
+**Access Methods:**
+
+1. **Production (Everyone):**
+   - `https://visualneurons.com` → nginx → localhost:3000
+
+2. **Direct (Your IP only, if port 3000 is open):**
+   - `http://YOUR_EC2_IP:3000` → directly to Next.js
+
+3. **From EC2 itself:**
+   - `http://localhost:3000` → directly to Next.js
+   - Via SSH tunnel: `ssh -L 3000:localhost:3000 ubuntu@YOUR_EC2_IP`
+
+---
+
+## 💡 Development vs Production Modes
+
+### `npm run dev` (What You're Using)
+
+**Characteristics:**
+- ✅ Hot reload - changes appear instantly
+- ✅ Detailed logs - see everything
+- ✅ Source maps - easy debugging
+- ✅ Faster development cycle
+- ❌ Slower performance
+- ❌ Larger memory footprint
+
+**Perfect for:**
+- Single-user setups
+- Active development
+- When you want instant feedback
+
+### `npm run build` + `npm start` (Traditional Production)
+
+**Characteristics:**
+- ✅ Optimized performance
+- ✅ Smaller memory usage
+- ✅ Minified code
+- ❌ No hot reload - requires rebuild for changes
+- ❌ Silent logs by default
+- ❌ Slower iteration
+
+**Perfect for:**
+- Multi-user production
+- When optimization matters
+- When changes are infrequent
+
+### Why We Use Dev Mode for Production
+
+For a **single-user app** where you're the only one using it:
+- The performance difference doesn't matter
+- Hot reload is incredibly valuable
+- No need to rebuild every time you make a change
+- Logs are visible and helpful
+- Simpler workflow
+
+**You get production-grade security (HTTPS, Cognito, nginx) with development-mode productivity!**
+
+---
+
+## ✨ Using the App
 
 ### Create Images
+
 1. Select **"Create"** mode
 2. **Choose your model:**
-   - **Imagen 4 (Standard)** - Default, highest-quality photorealistic generation (Ultra tier)
+   - **Imagen 4 (Standard)** - Default, highest-quality photorealistic generation
    - **Nano Banana** - Alternative multimodal model
 3. Type a prompt: *"A serene mountain landscape at sunset"*
 4. Click **Send**
@@ -227,140 +400,416 @@ npm run dev
 6. **Click Save** to add to gallery *(images are not saved automatically!)*
 
 ### Edit Images
+
 1. Select **"Edit selected"** mode
-2. Upload an image (or select from gallery)
-3. **Pick an editing model** - Click "▶ Change Model" to expand selector (Nano Banana default, or switch to Qwen Image Edit Plus, SeedEdit 3.0, or Seedream 4)
-4. **Image appears in chat** - natural conversation flow!
-5. Describe the change: *"Make the sky purple and add stars"*
-6. Click **Send**
-7. Model quick guide:
-   - *Nano Banana* – great all-rounder, strongest at maintaining likenesses
-   - *Qwen Image Edit Plus* – best when you need ControlNet guidance or multi-image consistency
-   - *SeedEdit 3.0* – excels at precise adjustments (lighting, removals, style tweaks)
-   - *Seedream 4* – choose for high-res edits or rich style transfers up to 4K
-8. **Chain edits**: After each edit, you can continue editing the result!
+2. Upload an image or select from gallery
+3. **Pick an editing model** - Click "▶ Change Model" to expand
+   - **Nano Banana** (default) - Best all-rounder, maintains likenesses
+   - **Qwen Image Edit Plus** - ControlNet-aware, multi-image consistency
+   - **SeedEdit 3.0** - Precise adjustments, preserves details
+   - **Seedream 4** - High-resolution edits up to 4K
+4. Describe the change: *"Make the sky purple and add stars"*
+5. Click **Send**
+6. **Chain edits**: Keep editing the result!
    - *"Now add a sunset"*
    - *"Make it more vibrant"*
-   - Each edit builds on the previous result
 
 ### Generate Videos 🎬
+
 1. Select **"Video"** mode
 2. **Choose video generation mode:**
-   - **Standard** (frame anchors) - Control start/end of video
-   - **Reference** (R2V) - Maintain consistent character/object appearance
-3. **Configure based on selected mode:**
-
-**Standard Mode:**
-- **First Frame** (optional): Click "First Frame" button on images
-- **Last Frame** (optional): Click "Last Frame" button on images  
-- **Duration**: Adjust 1-8 seconds with slider
-- **Resolution**: 720p or 1080p
-- **Generate Audio**: Toggle on/off
-
-**Reference Mode (R2V):**
-- **Reference Images** (1-3 required): Click "+ Reference" on images
-- **Duration**: Locked to 8 seconds (API requirement)
-- **Aspect Ratio**: Locked to 16:9 (API requirement)
-- **Resolution**: 720p or 1080p
-- **Generate Audio**: Toggle on/off
-- ⓘ Last frame is ignored in Reference mode
-
-4. Type your video prompt describing the scene and motion
+   - **Standard** - Control start/end frames, flexible duration (1-8s)
+   - **Reference** - Consistent character/object appearance (1-3 images)
+3. Configure settings and select frames from your images
+4. Type your video prompt with camera movement and action
 5. Click **Send** and wait (progress updates shown)
 6. Click **Save** to add to gallery
 
-**Image Selection Buttons:**
-- **Standard Mode**: "First Frame" (purple), "Last Frame" (orange)
-- **Reference Mode**: "+ Reference" (green, max 3)
+**Example Video Prompts:**
+- *"A calico kitten playing with yarn, morning sunlight, camera slowly zooms in"*
+- *"Aerial view of river through forest, camera following water downstream"*
 
-**Example Prompts:**
-- *"A serene park in spring next to a lake during golden hour, camera panning across wildflowers"*
-- *"Drone shot flying over a misty forest at sunrise, revealing a hidden waterfall"*
+### Gallery & Usage
 
-### Image Interaction
-- **Chat images** are displayed at a comfortable size (max 448px wide)
-- **Click any image** in chat to view full size in new tab
-- Hover shows cursor change and slight opacity effect
-- Images from gallery appear inline in chat when sent
-- **Select any image for editing**: Click "Edit This" button on any image in chat
-  - Switches to Edit mode automatically
-  - Selected image gets blue ring highlight
-  - Button shows "✓ Selected" when that image is active
-  - Perfect for comparing models then editing your favorite
-- **Undo edits**: Click "← Previous" button on edited images to revert
-  - Goes back to the version before the edit
-  - Useful if you don't like the result
-  - Example: Dog → Tiger (don't like) → Click "← Previous" → Back to Dog!
-
-### Gallery
-- Click **Gallery** to view **only saved media** (images and videos)
-- **Filter by type:** All / Images / Videos
-- Generated media **is NOT auto-saved** - you must click Save!
-- **Multi-Select:** ✨ NEW!
-  - Click checkbox in top-left corner of any image/video
-  - Select multiple items (great for video generation with multiple frames!)
-  - Click **"Send X to Chat →"** to load all selected items at once
-  - Automatically switches to Video mode when loading multiple images
-- **AI-generated content** shows badges:
-- **✨ AI** for images (Imagen 4 / Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4)
-  - **🎬 VIDEO** for Veo 3.1 videos
-- **User-uploaded images** have no badge
-- Click any item for details and metadata
-  - Images: dimensions, file size
-  - Videos: duration, resolution, FPS, audio
-- **Actions available:**
-  - **Send to Chat** - Load media for editing or as video frame
-  - **Open Full Size** - View in new tab (or play video)
-  - **⬇️ Download** - Save to your computer
-  - **🗑️ Delete** - Permanently remove (with confirmation)
-
-### Usage & Costs
-- Click **Usage** to track your API spending
-- **Dashboard shows:**
-  - **Today** - Current day's operations and costs
-  - **This Week** - Monday to now
-  - **This Month** - 1st to now
-  - **All Time** - Total usage since you started
-- **Breakdown by model:**
-  - Imagen 4 operations and cost
-- Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4 operations and cost
-  - Total operations and estimated cost in USD
-- **Replicate pricing used:**
-  - Imagen 4 Ultra: ~$0.08 per image (GPU time-based)
-  - Nano Banana: ~$0.05 per image (GPU time-based)
-  - Veo 3.1: ~$4.00 per 8-second video (GPU time-based)
-- Costs are estimates based on typical GPU time; see [Replicate pricing](https://replicate.com/pricing) for details
-
-### Save Button Behavior
-- After generating or editing, click **"Save"** to keep the image
-- Button shows **"Save"** → Click it → Shows **"✓ Saved"**
-- **Only saved images appear in the gallery**
-- Unsaved images stay in chat but disappear on refresh
-- This prevents gallery clutter from experiments!
+- **Gallery** - View saved images/videos, filter by type, download, delete
+- **Usage** - Track API spending by model and time period
 
 ---
 
-## 🛠️ Useful Commands
+## 📋 Commands Reference
+
+### Managing the App with Screen
+
+```bash
+# Start the app (in background, stays running when you disconnect)
+screen -dmS visualneurons npm run dev
+
+# View logs (attach to the screen session)
+screen -r visualneurons
+# Press Ctrl+A then D to detach (app keeps running)
+
+# Check if running
+screen -ls
+
+# Stop the app
+screen -X -S visualneurons quit
+
+# Restart the app
+screen -X -S visualneurons quit
+screen -dmS visualneurons npm run dev
+```
+
+**Viewing Logs:**
+```bash
+# BEST OPTION - See everything in real-time!
+screen -r visualneurons
+
+# You'll see:
+# - Every HTTP request
+# - Image/video generation progress
+# - Compilation status
+# - Hot reload notifications
+# - Errors and warnings
+# - Everything npm run dev normally shows!
+
+# When done watching, press: Ctrl+A then D
+```
+
+### Managing Nginx
+
+```bash
+# Test configuration
+sudo nginx -t
+
+# Reload configuration
+sudo systemctl reload nginx
+
+# Restart nginx
+sudo systemctl restart nginx
+
+# Check status
+sudo systemctl status nginx
+
+# View logs
+sudo tail -f /var/log/nginx/access.log  # All requests
+sudo tail -f /var/log/nginx/error.log   # Errors only
+```
+
+### SSL Certificate Management
+
+```bash
+# Get certificate (first time)
+sudo certbot --nginx -d visualneurons.com
+
+# Test renewal
+sudo certbot renew --dry-run
+
+# Force renewal (if needed)
+sudo certbot renew --force-renewal
+```
+
+### AWS Cognito User Management
+
+```bash
+# Create a new user
+bash scripts/create-cognito-user.sh
+
+# Check user status
+aws cognito-idp admin-get-user \
+  --user-pool-id YOUR_POOL_ID \
+  --username YOUR_USERNAME
+
+# Set permanent password (if needed)
+aws cognito-idp admin-set-user-password \
+  --user-pool-id YOUR_POOL_ID \
+  --username YOUR_USERNAME \
+  --password "YourNewPassword123!" \
+  --permanent
+```
+
+### Useful Development Commands
 
 ```bash
 # Stop the dev server
 pkill -f "next dev"
 
-# Start the dev server
+# Start dev server (not in screen)
 npm run dev
 
-# View database
+# View database in browser
 npx prisma studio
 
 # Check what's on port 3000
 lsof -i :3000
 
-# Build for production
-npm run build
+# Get your EC2 public IP
+curl -4 ifconfig.me
 
-# Run production build
-npm start
+# Test DNS resolution
+dig visualneurons.com
+
+# Check if app is responding
+curl http://localhost:3000
 ```
+
+---
+
+## 🔧 Troubleshooting
+
+### Understanding the Setup
+
+**Your Complete Stack:**
+
+```
+Browser → visualneurons.com:443 (HTTPS)
+  ↓
+Nginx (ports 80/443)
+  • Handles SSL
+  • Reverse proxy
+  ↓
+Next.js App (localhost:3000)
+  • Runs in screen session
+  • npm run dev
+  • Hot reload enabled
+```
+
+**Everything runs on the same EC2 instance.**
+
+---
+
+### Common Issues & Solutions
+
+#### Login Issues
+
+**Issue: "Incorrect username or password"**
+- **Check:** Username is correct (case-sensitive!)
+- **First login:** The app will automatically prompt you to change your temporary password
+- **Reset password:**
+```bash
+aws cognito-idp admin-set-user-password \
+  --user-pool-id YOUR_POOL_ID \
+  --username YOUR_USERNAME \
+  --password "YourNewPassword123!" \
+  --permanent
+```
+
+**Issue: "User does not exist"**
+- **Solution:** Create user with `bash scripts/create-cognito-user.sh`
+
+**Issue: "SECRET_HASH was not received"**
+- **Cause:** App client was created WITH a client secret
+- **Solution:** Create a new app client as "Single-page application (SPA)" type (no secret)
+- Update `.env` with the new Client ID
+- Restart the app
+
+---
+
+#### App Not Running
+
+**Issue: 502 Bad Gateway**
+- **Check if app is running:**
+```bash
+screen -ls
+```
+- **If not running, start it:**
+```bash
+screen -dmS visualneurons npm run dev
+```
+- **View logs for errors:**
+```bash
+screen -r visualneurons
+```
+
+**Issue: Port 3000 already in use**
+```bash
+# Find what's using it
+lsof -i :3000
+
+# Kill it
+pkill -f "next dev"
+
+# Start again
+screen -dmS visualneurons npm run dev
+```
+
+---
+
+#### Domain & SSL Issues
+
+**Issue: Can't access via domain**
+- **Verify DNS:** `dig visualneurons.com` should show your EC2 IP
+- **Check nginx:** `sudo systemctl status nginx`
+- **Check security group:** Ports 80 and 443 must be open to 0.0.0.0/0
+
+**Issue: HTTPS not working**
+- **Check certificate:** `sudo certbot certificates`
+- **Verify ports 80/443 are open** in security group
+- **Check nginx config:** `sudo nginx -t`
+
+---
+
+#### Code Changes Not Appearing
+
+**Solution:** You're running in dev mode - just refresh your browser!
+- Dev mode automatically detects file changes and reloads
+- No rebuild needed
+- If changes still don't appear:
+  1. Check `screen -r visualneurons` for compilation errors
+  2. Try hard refresh: Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
+
+---
+
+#### Viewing Logs
+
+**Application Logs (Best Option):**
+```bash
+screen -r visualneurons
+# See everything: requests, compilation, errors, hot reload
+# Press Ctrl+A then D to detach
+```
+
+**Nginx Logs:**
+```bash
+# All HTTP requests
+sudo tail -f /var/log/nginx/access.log
+
+# Nginx errors only
+sudo tail -f /var/log/nginx/error.log
+```
+
+---
+
+### Database & Storage Issues
+
+**Images not displaying:**
+```bash
+# Fix permissions
+sudo chown -R $USER:$USER /var/visualneurons
+chmod -R 755 /var/visualneurons
+```
+
+**Database issues:**
+```bash
+# Regenerate Prisma client
+npx prisma generate
+
+# View database in browser
+npx prisma studio
+```
+
+**"API key not valid":**
+- Check `.env` has `REPLICATE_API_KEY=your_key` (no quotes)
+- Restart server: `screen -X -S visualneurons quit && screen -dmS visualneurons npm run dev`
+- Verify key at https://replicate.com/account/api-tokens
+
+---
+
+## 🎨 Features & Models
+
+### What's in This App
+
+**✅ Core Features:**
+- Beautiful chat interface with dark mode
+- Create/Edit/Video mode toggle
+- Auto-scroll to latest content
+- Image and video display inline
+- Gallery with filtering and multi-select
+- Usage & cost tracking dashboard
+- Save/download/delete media
+- Iterative editing with undo
+- Chat persistence (localStorage)
+
+**✅ AI Models:**
+- **Imagen 4 Ultra** - Highest-quality image generation (2K resolution)
+- **Nano Banana** - Versatile generation + editing
+- **Qwen Image Edit Plus** - ControlNet-aware editing
+- **SeedEdit 3.0** - Detail-preserving targeted edits
+- **Seedream 4** - High-resolution editing up to 4K
+- **Veo 3.1** - Cinematic video generation with audio
+
+**✅ Production Features:**
+- AWS Cognito authentication (username/password)
+- Nginx reverse proxy with SSL/HTTPS
+- Screen session management (simple & reliable!)
+- Route53 DNS integration
+- Secure HTTP-only cookies
+- Self-registration disabled (admin-only user creation)
+
+---
+
+### Model Comparison
+
+| Model | Best For | Resolution | Cost (Replicate) |
+|-------|----------|------------|------------------|
+| **Imagen 4 Ultra** | Photorealistic images | 2K (2048×2048) | ~$0.08/image |
+| **Nano Banana** | Creative edits, variations | 1024×1024 | ~$0.05/image |
+| **Qwen Image Edit Plus** | ControlNet, multi-image | Configurable | $0.03/image |
+| **SeedEdit 3.0** | Precise adjustments | Original size | $0.03/image |
+| **Seedream 4** | High-res edits, styles | Up to 4K | $0.03/image |
+| **Veo 3.1** | Cinematic videos | 720p/1080p | ~$4.00/8s video |
+
+**Choosing the Right Model:**
+
+- **Imagen 4:** Best quality images, fastest generation
+- **Nano Banana:** Great for maintaining likeness in edits
+- **Qwen Image Edit Plus:** When you need structural guidance or multi-image consistency
+- **SeedEdit 3.0:** Precise changes (lighting, removals) with minimal side effects
+- **Seedream 4:** Style transfers and high-resolution creative reworks
+- **Veo 3.1:** Professional video with realistic motion and native audio
+
+---
+
+## 💡 Writing Good Prompts
+
+### For Image Generation
+
+Be specific and include details:
+- *"A photorealistic portrait of a cat with blue eyes, studio lighting, bokeh background"*
+- *"Futuristic city skyline at night, neon lights, cyberpunk style"*
+- *"Minimalist product photo, white background, professional lighting"*
+
+### For Image Editing
+
+Be clear and direct:
+- *"Change the shirt color to red"*
+- *"Make the background a beach sunset"*
+- *"Add a smile and brighter lighting"*
+
+Chain edits for best results!
+
+### For Video Generation
+
+Include scene, motion, and camera work:
+- *"A serene beach at sunset, waves gently rolling, camera pans left to right"*
+- *"Drone shot descending over misty forest, revealing hidden waterfall"*
+- *"Close-up of raindrops on window, city lights blurred, melancholic mood"*
+
+---
+
+## 🪝 Webhook-Based Video Generation (Optional)
+
+**Why use webhooks?**
+
+**Without Webhooks (Default):**
+- ❌ Must wait on the page
+- ❌ If you refresh → video lost, API credits wasted
+
+**With Webhooks (Recommended):**
+- ✅ Video processes in background
+- ✅ Can refresh, navigate away, or close browser
+- ✅ Auto-saved to gallery when complete
+- ✅ No wasted credits
+
+**Setup:**
+
+Just set `WEBHOOK_BASE_URL=https://visualneurons.com` in your `.env` and restart!
+
+For local development with ngrok:
+1. Install: `npm install -g ngrok`
+2. Start: `ngrok http 3000` (in separate terminal)
+3. Copy the HTTPS URL
+4. Set `WEBHOOK_BASE_URL=https://your-id.ngrok-free.app` in `.env`
+5. Restart app
 
 ---
 
@@ -369,611 +818,275 @@ npm start
 ```
 visual-llms/
 ├── app/
-│   ├── api/              # API routes (create, edit, gallery, media)
+│   ├── api/              # API routes (create, edit, video, gallery, auth)
 │   ├── gallery/          # Gallery page
-│   ├── page.tsx          # Main chat page
+│   ├── login/            # Login page (Cognito)
+│   ├── usage/            # Usage dashboard
+│   ├── page.tsx          # Main chat interface
 │   └── layout.tsx        # Root layout
 ├── lib/
 │   ├── replicate.ts      # Replicate API integration
+│   ├── auth.ts           # AWS Cognito server-side auth
+│   ├── auth-client.ts    # Cognito client-side auth
 │   ├── prisma.ts         # Database client
 │   ├── session.ts        # Session management
-│   └── storage.ts        # File operations
+│   ├── storage.ts        # File operations
+│   └── pricing.ts        # Cost calculations
+├── scripts/
+│   ├── create-cognito-user.sh  # Create Cognito users
+│   ├── setup-nginx.sh          # Install & configure nginx
+│   ├── setup-ssl.sh            # Get SSL certificate
+│   └── nginx-config.conf       # Nginx configuration
 ├── prisma/
 │   └── schema.prisma     # Database schema
+├── middleware.ts         # Auth middleware (route protection)
 └── /var/visualneurons/   # Data storage
     ├── db.sqlite         # SQLite database
-    └── media/            # Image files
+    └── media/            # Image & video files
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 🔐 Security Features
 
-### "API key not valid"
-- Check `.env` has `REPLICATE_API_KEY=your_key` (no quotes)
-- Restart server after adding key
-- Verify key at https://replicate.com/account/api-tokens
+**Your app includes:**
+- ✅ AWS Cognito authentication (enterprise-grade)
+- ✅ HTTPS/SSL encryption via Let's Encrypt
+- ✅ Nginx reverse proxy (protects Next.js)
+- ✅ HTTP-only secure cookies
+- ✅ No public sign-up (admin creates all users)
+- ✅ Session-based access control
+- ✅ Password change flow on first login
+- ✅ Port 3000 not publicly accessible
 
-### "Image generation not available"
-- Imagen 4 is the default and should work out of the box
-- If you get errors, verify your Replicate API key is valid
-- Try switching to Nano Banana model if Imagen 4 has issues
-- Image editing defaults to Nano Banana but you can switch to Qwen Image Edit Plus, SeedEdit 3.0, or Seedream 4 if you need different strengths
-- Check Replicate dashboard for model availability
-
-### Server won't start
-```bash
-# Kill process on port 3000
-kill -9 $(lsof -t -i:3000)
-
-# Start again
-npm run dev
-```
-
-### Images not displaying
-```bash
-# Fix permissions
-sudo chown -R $USER:$USER /var/visualneurons
-chmod -R 755 /var/visualneurons
-```
-
-### Database issues
-```bash
-# Regenerate Prisma client
-npx prisma generate
-
-# View database
-npx prisma studio
-```
-
----
-
-## 🎨 Features
-
-**✅ Fully Implemented:**
-- ✅ Chat interface with create/edit/video modes
-- ✅ **Expanded model support:**
-  - ✅ Imagen 4 for high-fidelity image generation
-  - ✅ Nano Banana for generation + editing
-  - ✅ Qwen Image Edit Plus for ControlNet-aware editing
-  - ✅ SeedEdit 3.0 for detail-preserving targeted edits
-  - ✅ Seedream 4 for unified high-resolution generation & editing
-  - ✅ Veo 3.1 for cinematic video generation with audio
-- ✅ Model selection UI (radio buttons in Create mode & collapsible multi-model selector in Edit mode)
-- ✅ Image generation from text prompts (Imagen 4 or Nano Banana)
-- ✅ Image editing with natural language instructions across four models
-- ✅ Auto-scroll to bottom for seamless navigation back to latest content
-- ✅ **Video generation** with Veo 3.1 (text-to-video or image-to-video)
-- ✅ Frame selection from chat history
-- ✅ Progress tracking for video generation
-- ✅ **Select any image for editing** from chat history
-- ✅ Iterative editing (chain multiple edits)
-- ✅ **Undo edits** (revert to previous version)
-- ✅ **Usage & Costs Dashboard** with API spending tracking
-- ✅ Gallery with grid view, media type filtering, and detail modal
-- ✅ Video playback with controls in chat and gallery
-- ✅ Save button (explicit save, no auto-save)
-- ✅ Download images and videos to your computer
-- ✅ Delete media with confirmation
-- ✅ Send to Chat from gallery
-- ✅ Click images to view full size, videos play inline
-- ✅ Session-based storage (cookie-based)
-- ✅ SQLite database + local file storage (images & videos)
-- ✅ Smart AI badges and video indicators
-- ✅ Error handling and graceful degradation
-- ✅ **Replicate API integration** for unified model access
-
-**🔮 Future Enhancements:**
-- Style presets and variations
-- Batch processing
-- Image masking and advanced edits
-- Full redo functionality (currently only undo)
-- Image comparison slider (before/after)
-- Cloud storage (S3)
+**Future enhancements:**
 - PostgreSQL migration
-- User authentication
+- S3/Cloud storage
+- Rate limiting
+- WAF (Web Application Firewall)
+- Multi-factor authentication (MFA)
 
 ---
 
-## 💡 Tips for Best Results
+## 🛠️ Advanced Topics
 
-### Choosing the Right Model
+### SSH Tunnel for Debugging
 
-**Imagen 4 Ultra (Default for Creation):**
-- Best for: Highest-quality photorealistic images
-- Strengths: Superior detail, realistic lighting, professional quality
-- Resolution: 2K (2048×2048 pixels)
-- Use when: You want the absolute best image generation quality
-- Speed: Fast generation (~5-10 seconds)
-- Cost: $0.06 per image (Ultra tier - same price for 1K or 2K!)
-
-**Nano Banana (Default for Editing & Alternative for Creation):**
-- Best for: Creative variations and everyday edits
-- Strengths: Maintains subject likeness, follows instructions well
-- Use when: You want multimodal capabilities or quick edits without extra configuration
-- Speed: Moderate generation
-
-**Qwen Image Edit Plus (ControlNet & Multi-Image Editing):**
-- Best for: Edits that need structure guidance (edges, depth) or multi-image consistency
-- Strengths: Native ControlNet support, adjustable quality/output format, fast iterations when `go_fast` is enabled
-- Use when: You need to align edits with sketches, depth maps, or keep multiple shots in sync
-
-**SeedEdit 3.0 (Detail-Preserving Adjustments):**
-- Best for: Lighting tweaks, object removal/addition, outfit changes, and subtle style conversion
-- Strengths: High fidelity to the original photo while applying precise changes
-- Use when: You want to modify specific regions while keeping the base image intact
-
-**Seedream 4 (High-Resolution Style & Re-Imagining):**
-- Best for: High-res edits, style transfers, or re-imagining concepts up to 4K
-- Strengths: Unified generate/edit workflow, strong prompt adherence, flexible aesthetics
-- Use when: You need upscale edits, cinematic re-styling, or want to iterate toward final production-quality assets
-
-**Veo 3.1 (Video Generation):**
-- Best for: Cinematic videos with realistic motion and audio
-- Strengths: Natural physics, smooth camera movements, native audio synthesis, subject consistency
-- Resolution: 720p/1080p at 24fps
-- Use when: You need short-form video content with professional quality
-- Speed: 11 seconds to 6 minutes (varies by complexity)
-- **Two Generation Modes:**
-  - **Standard Mode**: Frame anchors (first/last), flexible duration (1-8s), any aspect ratio
-  - **Reference Mode (R2V)**: Subject consistency (1-3 ref images), fixed 8s, 16:9 only
-- Features: 
-  - Text-to-video
-  - First & last frame anchors (Standard mode)
-  - Reference images for consistent subjects (Reference mode)
-  - Context-aware audio generation
-
-### Writing Good Prompts
-
-**For Image Generation (Imagen 4 Ultra or Nano Banana):**
-- Be specific: *"A photorealistic portrait of a cat with blue eyes, studio lighting, bokeh background"*
-- Include style: *"in the style of Van Gogh"* or *"minimalist modern design"*
-- Specify details: lighting, mood, composition, colors
-- Imagen 4 Ultra excels at: Architecture, landscapes, portraits, product photography with superior detail
-
-**For Image Editing (Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4):**
-- Be clear and direct: *"Change the shirt color to red"*
-- One change at a time still works best; chain edits to iterate
-- Choose the model that matches your goal:
-  - *Nano Banana* – likeness preservation and general-purpose edits
-  - *Qwen Image Edit Plus* – ControlNet conditioning or structured multi-image edits
-  - *SeedEdit 3.0* – precise adjustments with minimal collateral changes
-  - *Seedream 4* – stylistic transformations and high-resolution reworks
-
-**For Video Generation (Veo 3.1):**
-- Describe the scene: *"A serene beach at sunset, waves gently rolling onto shore"*
-- Include camera movement: *"Camera pans slowly from left to right"* or *"Drone shot descending"*
-- Specify motion/action: *"A person walking along the beach"* or *"Leaves rustling in the wind"*
-- Lighting and atmosphere: *"Golden hour lighting, warm tones"* or *"Misty morning, soft diffused light"*
-- Veo 3.1 excels at: Natural scenery, realistic physics, cinematic camera work, subtle motion
-
-### Example Prompts
-
-**Image Creation:**
-- *"A cozy coffee shop interior, warm lighting, autumn vibes, cinematic"*
-- *"Futuristic city skyline at night, neon lights, cyberpunk style"*
-- *"Minimalist product photo, white background, professional studio lighting"*
-
-**Image Editing:**
-- *"Change the background to a beach sunset"*
-- *"Make the person's outfit formal business attire"*
-- *"Add a smile and brighter lighting"*
-
-**Video Generation:**
-- *"A calico kitten playing with a ball of yarn, morning sunlight streaming through a window, camera slowly zooms in"*
-- *"Aerial view of a winding river through a lush forest, camera following the water downstream"*
-- *"Close-up of raindrops falling on a window, city lights blurred in the background, melancholic mood"*
-- *"Time-lapse style clouds moving across a blue sky over a mountain range, peaceful atmosphere"*
-
----
-
-## 🪝 Webhook-Based Video Generation
-
-**How It Works:**
-
-**Without Webhooks (Default):**
-- Video generation blocks until complete
-- If you refresh → video lost, API credits wasted
-- Must wait on the page
-
-**With Webhooks (Recommended):**
-- Set `WEBHOOK_BASE_URL` in `.env`
-- Video starts → returns immediately
-- You can refresh, navigate away, or close browser
-- Video processes in background
-- Webhook saves to gallery automatically when done
-- Check gallery to see completed videos!
-
-**What is ngrok?**
-Ngrok creates a **secure tunnel** from a public HTTPS URL to your localhost. When you run `ngrok http 3000`, it gives you something like `https://abc123.ngrok-free.app` that forwards to your `localhost:3000`. This allows Replicate to send webhooks to your local development machine.
-
-**Setup for Development:**
-1. Sign up at https://dashboard.ngrok.com/signup (free)
-2. Get your authtoken from https://dashboard.ngrok.com/get-started/your-authtoken
-3. Configure: `ngrok config add-authtoken YOUR_TOKEN`
-4. Install: `npm install -g ngrok`
-5. Start ngrok in a **separate terminal**: `ngrok http 3000`
-6. Copy the HTTPS URL shown (e.g., `https://abc123.ngrok-free.app`)
-7. Add to `.env`: `WEBHOOK_BASE_URL=https://abc123.ngrok-free.app`
-8. Restart your dev server: `npm run dev`
-
-**Important:** Keep both terminals running - one for your app, one for ngrok!
-
-**Setup for Production:**
-- Just set `WEBHOOK_BASE_URL=https://yourdomain.com`
-- No ngrok needed (your domain is already public)
-
-**Benefits:**
-- ✅ Videos complete even if you leave
-- ✅ No wasted credits on refresh
-- ✅ Auto-saved to gallery
-- ✅ Better UX for long generations
-
----
-
-## 🔐 Security Notes
-
-**Current Setup (Development):**
-- HTTP-only session cookies
-- Port 3000 restricted to your IP
-- API key in `.env` (never committed)
-- Local file storage with session-based access
-- Webhook endpoint validates Replicate payloads
-
-**Before Production:**
-- [ ] Migrate SQLite → PostgreSQL
-- [ ] Move images to S3/Cloud Storage
-- [ ] Add user authentication
-- [ ] Enable HTTPS/TLS
-- [ ] Set up domain name
-- [ ] Add rate limiting
-- [ ] Add webhook signature verification
-
----
-
-## 📊 What's Under the Hood
-
-### API Routes
-
-**POST /api/images/create**
-- Input: `{ prompt: string, model: string }`
-- Output: Generated image URL + asset ID
-
-**POST /api/images/edit**
-- Input: `{ imageId: string, instruction: string }`
-- Output: Edited image URL + new asset ID
-
-**POST /api/videos/create**
-- Input: `{ prompt, videoGenerationMode, frames, settings }`
-- Output: Video URL + asset ID (or prediction ID if webhook mode)
-
-**POST /api/webhooks/replicate**
-- Webhook endpoint for Replicate predictions
-- Auto-saves completed videos to gallery
-
-**GET /api/predictions/[id]**
-- Check status of video generation
-- Returns: prediction status, asset when complete
-
-**POST /api/images/save**
-- Input: FormData with image file
-- Output: Saved asset info
-
-**GET /api/gallery**
-- Output: List of all session's media
-
-**GET /api/media/[sessionId]/[filename]**
-- Serves media files securely
-
-### Database Schema
-
-**sessions:** User sessions (cookie-based)  
-**media_assets:** Stored images with metadata  
-**actions:** Activity log (create, edit, upload)
-
----
-
-## 🧪 Python Test Scripts
-
-Standalone Python scripts (legacy) were used for earlier experiments and are not required.
-
-### Test Imagen 4 (Image Generation)
+Access your app's localhost:3000 directly in your browser:
 
 ```bash
-cd python_stuff
-pip install -r requirements-python.txt
-python test_imagen4.py
+# From your local machine:
+ssh -L 3000:localhost:3000 ubuntu@YOUR_EC2_IP
+
+# Then open: http://localhost:3000
+# This bypasses nginx - useful for debugging!
 ```
 
-- Generates 4 images with Imagen 4
-- Saves to `output_images/` directory
-- Tests: Text-to-image generation, aspect ratios, batch generation
-
-### Test Veo 3.1 (Video Generation)
+### Database Management
 
 ```bash
-cd python_stuff
-pip install -r requirements-python.txt
-python test_veo3.py
+# View database in browser UI
+npx prisma studio
+
+# Create new migration
+npx prisma migrate dev --name your_migration_name
+
+# Regenerate client after schema changes
+npx prisma generate
 ```
 
-- Generates an 8-second video with Veo 3.1
-- **Includes natively generated audio!**
-- Saves to `output_videos/` directory
-- Resolution: 720p or 1080p
-- Processing time: 11 seconds to 6 minutes (depending on server load)
+### Backup & Restore
 
-**Requirements:**
-  (no longer required)
-- Python 3.8+
-- Dependencies: `google-genai`, `python-dotenv`
+```bash
+# Backup database
+cp /var/visualneurons/db.sqlite /var/visualneurons/db.sqlite.backup
 
-**Model Information:**
-- **Imagen 4 Ultra:** High-fidelity image generation, 2K resolution
-- **Veo 3.1:** State-of-the-art video generation with realistic audio
-  - Text-to-video, image-to-video, video-to-video
-  - Video extension capabilities
-  - SynthID watermarking for AI verification
-  - Read more: [Veo 3.1 Documentation](https://ai.google.dev/gemini-api/docs/video)
+# Backup media files
+tar -czf media-backup.tar.gz /var/visualneurons/media/
 
----
-
-## 📚 Resources
-
-- **Replicate API Docs:** https://replicate.com/docs
-- **Replicate Models:**
-  - **Imagen 4 Ultra:** https://replicate.com/google/imagen-4-ultra
-  - **Nano Banana:** https://replicate.com/google/nano-banana
-  - **Qwen Image Edit Plus:** https://replicate.com/qwen/qwen-image-edit-plus
-  - **SeedEdit 3.0:** https://replicate.com/bytedance/seededit-3.0
-  - **Seedream 4:** https://replicate.com/bytedance/seedream-4
-  - **Veo 3.1:** https://replicate.com/google/veo-3.1
-- **Replicate Pricing:** https://replicate.com/pricing
-- **Next.js Docs:** https://nextjs.org/docs
-- **Prisma Docs:** https://www.prisma.io/docs
-
----
-
-## 🎯 What This App Does
-
-**Visual Neurons** is a chat-based image creation and editing tool:
-
-1. **Chat Interface** - Natural language conversation
-2. **Create Mode** - Text prompts → Images (via `gemini-2.5-flash-image`)
-3. **Edit Mode** - Images + Instructions → Edited Images (Nano Banana / Qwen Image Edit Plus / SeedEdit 3.0 / Seedream 4)
-4. **Gallery** - View, organize, and re-edit saved images
-5. **Session-Based** - No login required, cookie-based sessions
-6. **Local-First** - All data stored on your server
-
-**Nano Banana** powered by the `gemini-2.5-flash-image` model is Google's image generation model that maintains consistent likenesses and supports advanced edits like outfit changes, photo blending, and style transfer.
-
----
-
-## 🚀 Quick Reference
-
-| Task | Command |
-|------|---------|
-| Start server | `npm run dev` |
-| Stop server | `pkill -f "next dev"` |
-| View database | `npx prisma studio` |
-| Check port | `lsof -i :3000` |
-| Build prod | `npm run build` |
-| Run prod | `npm start` |
-| Add migrations | `npx prisma migrate dev` |
-
-**Your app is ready!** Just add your Replicate API key and start creating. 🎨✨
-
----
-
-## 📝 Implementation Details
-
-### Files Created Today (Oct 12, 2025)
-
-**Core Application:**
-- `app/layout.tsx` - Root layout with metadata
-- `app/page.tsx` - Main chat interface (355 lines)
-- `app/gallery/page.tsx` - Gallery grid view (269 lines)
-- `app/globals.css` - Tailwind styles with dark mode
-
-**API Routes:**
-- `app/api/images/create/route.ts` - Text-to-image generation
-- `app/api/images/edit/route.ts` - Image editing with instructions
-- `app/api/images/save/route.ts` - Upload handler
-- `app/api/images/[id]/route.ts` - Get image details (for undo)
-- `app/api/images/[id]/save/route.ts` - Mark image as saved
-- `app/api/images/[id]/delete/route.ts` - Delete images
-- `app/api/gallery/route.ts` - List saved images
-- `app/api/media/[...path]/route.ts` - Serve image files
-
-**Libraries:**
-- `lib/replicate.ts` - Replicate API client with all model integrations (240+ lines)
-  - Imagen 4 Ultra via Replicate
-  - Nano Banana via Replicate
-  - Veo 3.1 via Replicate
-  - Four export functions: `generateImageWithImagen4()`, `generateImage()`, `editImage()`, `generateVideo()`
-  - Async prediction handling with polling
-- `lib/pricing.ts` - Replicate pricing calculations with GPU time tracking
-- `lib/prisma.ts` - Database client singleton
-- `lib/session.ts` - Session management utilities
-- `lib/storage.ts` - File system operations
-
-**Database:**
-- `prisma/schema.prisma` - Schema with 3 models
-- `prisma/migrations/` - Auto-generated migrations
-- `/var/visualneurons/db.sqlite` - SQLite database file
-
-**Configuration:**
-- `package.json` - Dependencies and scripts
-  - `replicate` npm package for unified API access
-- `tsconfig.json` - TypeScript configuration
-- `tailwind.config.ts` - Tailwind setup
-- `next.config.ts` - Next.js config with serverActions
-- `.gitignore` - Git ignore rules
-- `.env` - Environment variables (REPLICATE_API_KEY)
-
-### Key Technical Decisions
-
-**Why Next.js 15?**
-- Next.js 20 doesn't exist yet; 15 is the latest stable version
-- App Router for modern React Server Components
-- Built-in API routes for backend
-- Hot module reloading for fast development
-
-**Why SQLite?**
-- Single-file database, easy to backup
-- No separate server needed
-- Fast for single-user/dev scenarios
-- Easy migration path to PostgreSQL later
-
-**Why Local File Storage?**
-- Simple, fast, no cloud dependencies
-- Perfect for dev/single-box deployment
-- Easy to migrate to S3 later
-
-**Why Session Cookies?**
-- No login friction for MVP
-- Isolates user data
-- Production-ready upgrade path to real auth
-
-**Why Explicit Save Button?**
-- Prevents gallery clutter from experiments
-- User has full control
-- Can iterate many times before committing
-
-**Why Replicate API?**
-- **Single unified interface** for all Google models
-  - One API key instead of multiple SDKs
-  - Consistent async prediction model
-  - Better webhook support for long-running jobs
-- **Transparent pricing** based on actual GPU usage
-  - Pay only for compute time used
-  - Clear metrics for each prediction
-  - No hidden costs or tier complexity
-- **Easier to extend** with additional models
-  - Replicate has thousands of models available
-  - Simple integration pattern for new models
-  - Community-driven model ecosystem
-
-**Why Dual Model Support (Imagen 4 + Nano Banana)?**
-- **Imagen 4** is specialized for high-fidelity text-to-image generation
-  - Superior photorealism and detail quality
-  - Faster generation times
-  - Industry-leading image generation model
-- **Nano Banana** excels at multimodal tasks
-  - Maintains subject likeness during edits
-  - Better for creative variations
-  - Unified model for both generation and editing
-- Gives users choice based on their specific needs
-- Imagen 4 as default ensures best first impression
-
-### Database Schema
-
-```sql
--- Sessions (cookie-based)
-sessions {
-  id: UUID (primary key)
-  createdAt: DateTime
-  lastSeen: DateTime
-}
-
--- Media Assets
-media_assets {
-  id: UUID (primary key)
-  owner: UUID (session FK)
-  kind: "image" | "video"
-  provider: "local-fs" | "gemini-nano-banana" | "google-imagen4" | "google-veo-3.1"
-  path: String (relative to /var/visualneurons/media/)
-  bytes: Integer
-  width: Integer
-  height: Integer
-  metadata: JSON string
-  saved: Boolean (only saved=true shown in gallery)
-  createdAt: DateTime
-}
-
--- Actions (activity log)
-actions {
-  id: UUID (primary key)
-  userId: UUID (session FK)
-  action: "create" | "edit" | "upload" | "create_video"
-  assetId: UUID (media asset FK)
-  detail: JSON string
-  createdAt: DateTime
-}
-
--- Predictions (webhook-based generation)
-predictions {
-  id: UUID (primary key)
-  predictionId: String (Replicate prediction ID, unique)
-  owner: UUID (session FK)
-  type: "image" | "video"
-  status: "processing" | "succeeded" | "failed"
-  prompt: String
-  metadata: JSON string
-  assetId: UUID (links to media asset when complete)
-  error: String (error message if failed)
-  createdAt: DateTime
-  updatedAt: DateTime
-}
+# Restore database
+cp /var/visualneurons/db.sqlite.backup /var/visualneurons/db.sqlite
 ```
 
-### API Endpoints Summary
+---
+
+## 📊 API Reference
+
+### Endpoints
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
 | `/api/images/create` | POST | Generate image from text |
 | `/api/images/edit` | POST | Edit image with instruction |
 | `/api/images/save` | POST | Upload user image |
-| `/api/images/[id]` | GET | Get image details (for undo) |
+| `/api/images/[id]` | GET | Get image details |
 | `/api/images/[id]/save` | POST | Mark image as saved |
-| `/api/images/[id]/delete` | DELETE | Delete image & file |
-| `/api/gallery` | GET | List saved images |
-| `/api/media/[...path]` | GET | Serve image files |
+| `/api/images/[id]/delete` | DELETE | Delete image |
+| `/api/videos/create` | POST | Generate video |
+| `/api/gallery` | GET | List saved media |
+| `/api/usage` | GET | Get usage statistics |
+| `/api/media/[...path]` | GET | Serve media files |
+| `/api/auth/login` | POST | Login with Cognito |
+| `/api/auth/logout` | POST | Logout |
+| `/api/webhooks/replicate` | POST | Webhook for async predictions |
+| `/api/predictions/[id]` | GET | Check prediction status |
 
+### Database Schema
 
-### Project Statistics
+```sql
+-- Sessions (cookie-based)
+sessions {
+  id: UUID
+  createdAt: DateTime
+  lastSeen: DateTime
+}
 
-- **Total Files Created:** 25
-- **Lines of Code:** ~1,500 (TypeScript/React)  
-- **API Routes:** 8 endpoints
-- **UI Pages:** 2 (Chat + Gallery)
-- **Database Models:** 3 (with migrations)
-- **Features:** 16 fully implemented
-- **Dependencies:** 451 npm packages
-- **Development Time:** Single session
+-- Media Assets
+media_assets {
+  id: UUID
+  owner: UUID (session FK)
+  kind: "image" | "video"
+  provider: String
+  path: String
+  bytes: Integer
+  metadata: JSON
+  saved: Boolean
+  createdAt: DateTime
+}
+
+-- Actions (activity log)
+actions {
+  id: UUID
+  userId: UUID (session FK)
+  action: String
+  assetId: UUID (media FK)
+  detail: JSON
+  createdAt: DateTime
+}
+
+-- Predictions (webhook-based)
+predictions {
+  id: UUID
+  predictionId: String (Replicate ID)
+  owner: UUID (session FK)
+  type: "image" | "video"
+  status: String
+  prompt: String
+  metadata: JSON
+  assetId: UUID (nullable)
+  createdAt: DateTime
+}
+```
 
 ---
 
-## 🔧 Troubleshooting Notes
+## 🎯 Quick Tips
 
-**Veo 3.1 Image-to-Video Setup:**
-- The SDK requires `imageBytes` as a **base64-encoded string**, not a raw Buffer
-- Convert with: `imageBuffer.toString('base64')`
-- Pass directly to `generateVideos()` - no file upload needed:
-  ```javascript
-  const base64Image = imageBuffer.toString('base64');
-  await ai.models.generateVideos({
-    model: 'veo-3.1-generate-preview',
-    prompt: 'Your prompt here',
-    image: {
-      imageBytes: base64Image,  // base64 string
-      mimeType: 'image/png'
-    }
-  });
-  ```
+### Best Practices
+
+1. **Save selectively** - Only save images you want to keep (prevents gallery clutter)
+2. **Chain edits** - Build up complex changes step by step
+3. **Use undo** - Click "← Previous" if you don't like an edit
+4. **Try different models** - Each has strengths for different tasks
+5. **Watch screen logs** - See what's happening in real-time
+
+### Performance Tips
+
+- **Images:** Imagen 4 is fastest (~5-10s)
+- **Edits:** Nano Banana is most reliable
+- **Videos:** Use webhooks for long generations (don't wait on page)
+- **Storage:** Clean up old media periodically to save disk space
+
+### Cost Management
+
+- **Track usage** - Check the Usage page regularly
+- **Imagen 4:** Most expensive but highest quality (~$0.08)
+- **Editing models:** Cheaper (~$0.03-0.05)
+- **Videos:** Most expensive (~$4.00 for 8s)
+- **Save only final versions** - Don't save every iteration
+
+---
+
+## 📚 Resources
+
+### Documentation
+
+- **Replicate API:** https://replicate.com/docs
+- **Next.js:** https://nextjs.org/docs
+- **Prisma:** https://www.prisma.io/docs
+- **AWS Cognito:** https://docs.aws.amazon.com/cognito/
+- **Nginx:** https://nginx.org/en/docs/
+
+### Models
+
+- **[Imagen 4 Ultra](https://replicate.com/google/imagen-4-ultra)** - Image generation
+- **[Nano Banana](https://replicate.com/google/nano-banana)** - Generation + editing
+- **[Qwen Image Edit Plus](https://replicate.com/qwen/qwen-image-edit-plus)** - ControlNet editing
+- **[SeedEdit 3.0](https://replicate.com/bytedance/seededit-3.0)** - Precise edits
+- **[Seedream 4](https://replicate.com/bytedance/seedream-4)** - High-res editing
+- **[Veo 3.1](https://replicate.com/google/veo-3.1)** - Video generation
+
+### Pricing
+
+- **Replicate Pricing:** https://replicate.com/pricing
+- Costs are based on GPU time used
+- Check Usage dashboard for your spending
 
 ---
 
 ## 🎊 Summary
 
-✅ **Visual Neurons is complete!**
+**Visual Neurons is a complete AI creative platform that's:**
 
-Everything is implemented, tested, and documented:
-- Beautiful chat UI with inline images
-- Full Nano Banana integration
-- Smart gallery with save/delete/download
-- Iterative editing workflow with undo
-- Session management
-- Production-ready error handling
+- ✅ **Simple** - Screen + npm run dev, no complex build steps
+- ✅ **Powerful** - 6 AI models for images and videos
+- ✅ **Secure** - AWS Cognito + nginx + HTTPS
+- ✅ **Fast** - Hot reload, instant feedback
+- ✅ **Beautiful** - Modern UI with dark mode
+- ✅ **Production-ready** - Running on visualneurons.com
 
-**Start creating:** Add your Replicate API key → `npm run dev` → Open browser → Make amazing images! 🎨✨
+**Your setup is optimized for single-user productivity:**
+- Edit code → Save → Refresh browser → See changes!
+- View logs → `screen -r visualneurons`
+- No rebuilding, no complexity, just create! 🎨✨
+
+---
+
+## 📝 What We Built Together
+
+This app includes:
+
+**Core Application:**
+- Full Next.js 15 app with App Router
+- TypeScript + Tailwind CSS + Prisma ORM
+- SQLite database with local file storage
+- Beautiful chat interface
+
+**Authentication & Security:**
+- AWS Cognito integration (username/password)
+- Login page with password change flow
+- Middleware for route protection
+- HTTP-only secure cookies
+- SSL/HTTPS via Let's Encrypt
+
+**Deployment Infrastructure:**
+- Nginx reverse proxy configuration
+- Automated setup scripts
+- Screen session management
+- Route53 DNS integration
+
+**Features:**
+- Image generation (Imagen 4, Nano Banana)
+- Image editing (4 models to choose from)
+- Video generation (Veo 3.1 with audio)
+- Gallery with media management
+- Usage tracking and cost estimates
+- Webhook support for async processing
+
+**All running on a single EC2 instance with simple, maintainable architecture!** 🚀
+
+---
+
+Made with ❤️ using Replicate API • Next.js • AWS
+
+**Happy creating!** 🎨🎬✨

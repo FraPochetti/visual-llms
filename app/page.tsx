@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -20,7 +20,7 @@ type Message = {
 
 type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4';
 
-export default function ChatPage() {
+function ChatPageContent() {
     const searchParams = useSearchParams();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -436,6 +436,16 @@ export default function ChatPage() {
                             >
                                 Gallery
                             </Link>
+                            <button
+                                onClick={async () => {
+                                    await fetch('/api/auth/logout', { method: 'POST' });
+                                    window.location.href = '/login';
+                                }}
+                                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+                                title="Sign out"
+                            >
+                                Logout
+                            </button>
                         </div>
                     </div>
                 </header>
@@ -1147,6 +1157,18 @@ export default function ChatPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+            </div>
+        }>
+            <ChatPageContent />
+        </Suspense>
     );
 }
 

@@ -170,6 +170,16 @@ export default function UsagePage() {
                         >
                             Gallery
                         </Link>
+                        <button
+                            onClick={async () => {
+                                await fetch('/api/auth/logout', { method: 'POST' });
+                                window.location.href = '/login';
+                            }}
+                            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+                            title="Sign out"
+                        >
+                            Logout
+                        </button>
                     </div>
                 </div>
             </header>

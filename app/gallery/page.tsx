@@ -87,6 +87,16 @@ export default function GalleryPage() {
                         >
                             ← Back to Chat
                         </Link>
+                        <button
+                            onClick={async () => {
+                                await fetch('/api/auth/logout', { method: 'POST' });
+                                window.location.href = '/login';
+                            }}
+                            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+                            title="Sign out"
+                        >
+                            Logout
+                        </button>
                     </div>
                 </div>
             </header>
@@ -188,8 +198,8 @@ export default function GalleryPage() {
                                         className="absolute top-2 left-2 z-10 cursor-pointer"
                                     >
                                         <div className={`w-6 h-6 rounded flex items-center justify-center transition ${isSelected
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-600'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-600'
                                             }`}>
                                             {isSelected && <span className="text-sm">✓</span>}
                                         </div>
