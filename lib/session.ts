@@ -1,46 +1,39 @@
-import { cookies } from 'next/headers';
+import { getCurrentUser } from './auth-server';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from './prisma';
 
-const SESSION_COOKIE_NAME = 'vn_session';
-
+/**
+ * Get or create session based on Cognito username
+ * Each Cognito user always gets the same session (and their media)
+ */
 export async function getOrCreateSession(): Promise<string> {
-    const cookieStore = await cookies();
-    let sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-    if (!sessionId) {
-        // Create new session
-        sessionId = uuidv4();
-
-        // Store in database
-        await prisma.session.create({
-            data: {
-                id: sessionId,
-            },
-        });
-
-        // Set cookie
-        cookieStore.set(SESSION_COOKIE_NAME, sessionId, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 365, // 1 year
-            path: '/',
-        });
-    } else {
-        // Update last seen
-        await prisma.session.upsert({
-            where: { id: sessionId },
-            update: { lastSeen: new Date() },
-            create: { id: sessionId },
-        });
+    // Get Cognito user info (middleware guarantees this exists)
+    const user = await getCurrentUser();
+    
+    if (!user?.username) {
+        throw new Error('Not authenticated');
     }
-
-    return sessionId;
+    
+    // Find or create session by Cognito username
+    const session = await prisma.session.upsert({
+        where: { cognitoUsername: user.username },
+        update: { lastSeen: new Date() },
+        create: { 
+            id: uuidv4(),
+            cognitoUsername: user.username 
+        },
+    });
+    
+    return session.id;
 }
 
+/**
+ * Get session ID (returns null if not authenticated)
+ */
 export async function getSessionId(): Promise<string | null> {
-    const cookieStore = await cookies();
-    return cookieStore.get(SESSION_COOKIE_NAME)?.value || null;
+    try {
+        return await getOrCreateSession();
+    } catch {
+        return null;
+    }
 }
-

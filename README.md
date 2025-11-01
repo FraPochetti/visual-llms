@@ -1029,6 +1029,95 @@ For true single-user apps, you could modify the code to skip session filtering, 
 
 ---
 
+### Evolution: Cookie-Based to User-Linked Sessions
+
+**The Journey:**
+
+**Phase 1: Cookie-Based Sessions (Original)**
+```typescript
+// Random UUID stored in cookie
+sessionId = random UUID
+mediaAssets.owner = sessionId
+
+Problem: Clear cookies → lose access to your media
+```
+
+**Phase 2: Cognito Authentication Added**
+```typescript
+// Two separate systems:
+vn_auth_token = Cognito JWT (knows who you are)
+vn_session = Random UUID (owns your media)
+
+Problem: Cognito user not linked to session!
+```
+
+**Phase 3: User-Linked Sessions (Current)**
+```typescript
+// Sessions linked to Cognito username
+model Session {
+  id: UUID
+  cognitoUsername: String (unique)  // The key!
+}
+
+// Session lookup by username
+session = findOrCreate({ cognitoUsername: 'francesco' })
+mediaAssets.owner = session.id
+
+Result: Same user → always same session → always same media!
+```
+
+**Benefits of User-Linked Sessions:**
+
+1. ✅ **Persistent Identity**
+   - Login as "francesco" → Always get your session
+   - Clear cookies → Login again → Still your media
+   - Different browser → Login → Same media
+
+2. ✅ **True Multi-User Support**
+   - Add sister with Cognito user "sister" → She gets her own session
+   - Complete data isolation between users
+   - Each user sees only their media
+
+3. ✅ **Simpler Code**
+   - No cookie management needed
+   - No fallback logic required
+   - Just: username → session → media
+
+**Migration from Cookie to User-Linked:**
+
+```bash
+# Add cognitoUsername field to schema
+# Run: npx prisma db push
+
+# Link existing session to Cognito user
+sqlite3 /var/visualneurons/db.sqlite "
+UPDATE sessions 
+SET cognitoUsername = 'francesco' 
+WHERE id = 'YOUR_SESSION_ID';
+"
+
+# Clean up old cookie-based sessions
+sqlite3 /var/visualneurons/db.sqlite "
+DELETE FROM sessions WHERE cognitoUsername IS NULL;
+"
+```
+
+**The Result:**
+
+Before this change, you had multiple orphaned sessions from:
+- Development on localhost
+- Different browsers
+- Cleared cookies
+
+After this change:
+- One session per Cognito user
+- Persistent across browsers and devices
+- Ready for adding more users (each gets their own isolated session)
+
+This design now properly supports the use case: "I want to see MY stuff when I login, and my sister should see HER stuff when she logs in."
+
+---
+
 ### Backup & Restore
 
 ```bash

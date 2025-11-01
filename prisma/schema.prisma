@@ -11,9 +11,10 @@ datasource db {
 }
 
 model Session {
-  id         String   @id @default(uuid())
-  createdAt  DateTime @default(now())
-  lastSeen   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  cognitoUsername String?  @unique  // Link to Cognito user
+  createdAt       DateTime @default(now())
+  lastSeen        DateTime @updatedAt
   
   // Relations
   mediaAssets MediaAsset[]
