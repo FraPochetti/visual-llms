@@ -28,6 +28,11 @@ export const API_PRICING = {
     // Pricing: $0.03 per output image
     SEEDREAM_4: 0.03,
 
+    // Amazon Nova Canvas on AWS Bedrock
+    // Pricing: $0.08 per 2048x2048 premium quality image
+    // Source: https://aws.amazon.com/bedrock/pricing/
+    NOVA_CANVAS_PREMIUM_2K: 0.08,
+
     // Veo 3.1 on Replicate
     // Estimated: ~$4.00 per 8-second video (based on GPU time)
     VEO_3_1_PER_VIDEO: 4.00,
@@ -63,6 +68,9 @@ export function calculateCost(
     } else if (provider === 'seedream-4') {
         // Seedream 4 on Replicate
         return count * API_PRICING.SEEDREAM_4;
+    } else if (provider === 'aws-nova-canvas') {
+        // Nova Canvas on AWS Bedrock (2048x2048 premium)
+        return count * API_PRICING.NOVA_CANVAS_PREMIUM_2K;
     } else if (provider === 'google-veo-3.1') {
         // Veo 3.1 on Replicate
         return count * API_PRICING.VEO_3_1_PER_VIDEO;

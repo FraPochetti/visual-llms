@@ -9,6 +9,7 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@aws-sdk/client-bedrock-runtime": "^3.705.0",
         "@prisma/client": "^5.20.0",
         "amazon-cognito-identity-js": "^6.3.12",
         "jose": "^5.2.0",

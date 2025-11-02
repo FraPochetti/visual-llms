@@ -52,7 +52,7 @@ function extractUrlFromOutput(rawOutput: any): string | null {
     return null;
 }
 
-export type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4';
+export type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4' | 'nova-canvas';
 
 async function downloadImageFromUrl(url: string): Promise<{ imageData: string; mimeType: string; }> {
     const response = await fetch(url);

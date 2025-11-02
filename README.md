@@ -1,8 +1,8 @@
 # Visual Neurons
 
-A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
+A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nova Canvas** (AWS Bedrock) for natural language editing, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
 
-**Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API
+**Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API • AWS Bedrock
 
 **Status:** ✅ Fully functional and production-ready with AWS Cognito authentication!
 
@@ -730,6 +730,7 @@ npx prisma studio
 **✅ AI Models:**
 - **Imagen 4 Ultra** - Highest-quality image generation (2K resolution)
 - **Nano Banana** - Versatile generation + editing
+- **Nova Canvas (AWS Bedrock)** - 2K premium image generation + natural language editing
 - **Qwen Image Edit Plus** - ControlNet-aware editing
 - **SeedEdit 3.0** - Detail-preserving targeted edits
 - **Seedream 4** - High-resolution editing up to 4K
@@ -747,19 +748,21 @@ npx prisma studio
 
 ### Model Comparison
 
-| Model | Best For | Resolution | Cost (Replicate) |
-|-------|----------|------------|------------------|
-| **Imagen 4 Ultra** | Photorealistic images | 2K (2048×2048) | ~$0.08/image |
-| **Nano Banana** | Creative edits, variations | 1024×1024 | ~$0.05/image |
-| **Qwen Image Edit Plus** | ControlNet, multi-image | Configurable | $0.03/image |
-| **SeedEdit 3.0** | Precise adjustments | Original size | $0.03/image |
-| **Seedream 4** | High-res edits, styles | Up to 4K | $0.03/image |
-| **Veo 3.1** | Cinematic videos | 720p/1080p | ~$4.00/8s video |
+| Model | Best For | Resolution | Cost |
+|-------|----------|------------|------|
+| **Imagen 4 Ultra** | Photorealistic images | 2K (2048×2048) | ~$0.08/image (Replicate) |
+| **Nano Banana** | Creative edits, variations | 1024×1024 | ~$0.05/image (Replicate) |
+| **Nova Canvas** | Natural language editing | 2K (2048×2048) Premium | $0.08/image (AWS Bedrock) |
+| **Qwen Image Edit Plus** | ControlNet, multi-image | Configurable | $0.03/image (Replicate) |
+| **SeedEdit 3.0** | Precise adjustments | Original size | $0.03/image (Replicate) |
+| **Seedream 4** | High-res edits, styles | Up to 4K | $0.03/image (Replicate) |
+| **Veo 3.1** | Cinematic videos | 720p/1080p | ~$4.00/8s video (Replicate) |
 
 **Choosing the Right Model:**
 
 - **Imagen 4:** Best quality images, fastest generation
 - **Nano Banana:** Great for maintaining likeness in edits
+- **Nova Canvas:** Automatic masking via natural language, high-quality 2K premium output (AWS Bedrock)
 - **Qwen Image Edit Plus:** When you need structural guidance or multi-image consistency
 - **SeedEdit 3.0:** Precise changes (lighting, removals) with minimal side effects
 - **Seedream 4:** Style transfers and high-resolution creative reworks
@@ -784,6 +787,25 @@ Be clear and direct:
 - *"Add a smile and brighter lighting"*
 
 Chain edits for best results!
+
+### For Nova Canvas Editing (Natural Language Masking)
+
+Nova Canvas uses automatic masking - just describe what to change. The app shows these tips automatically when you select Nova Canvas in edit mode.
+
+**✅ Works Well:**
+- *"change the sky to sunset"*
+- *"remove the bird"*
+- *"make the car blue"*
+- *"replace the tree with a building"*
+
+**❌ Avoid:**
+- ~~*"make it look like sunset"*~~ (too vague, no specific object)
+- ~~*"change everything darker"*~~ (no specific area)
+- ~~*"make the sky as if it was sunset"*~~ (overly complex phrasing)
+
+**Pattern:** `[action] the [object] [outcome]`
+
+The app will automatically extract the object to edit (e.g., "sky" from "change the sky to sunset") and show you what was detected in the response for transparency.
 
 ### For Video Generation
 
@@ -834,7 +856,8 @@ visual-llms/
 │   └── layout.tsx        # Root layout
 ├── lib/
 │   ├── replicate.ts      # Replicate API integration
-│   ├── auth.ts           # AWS Cognito server-side auth
+│   ├── bedrock.ts        # AWS Bedrock Nova Canvas integration
+│   ├── auth-server.ts    # AWS Cognito server-side auth
 │   ├── auth-client.ts    # Cognito client-side auth
 │   ├── prisma.ts         # Database client
 │   ├── session.ts        # Session management
@@ -1215,15 +1238,15 @@ predictions {
 
 ### Performance Tips
 
-- **Images:** Imagen 4 is fastest (~5-10s)
-- **Edits:** Nano Banana is most reliable
+- **Images:** Imagen 4 is fastest (~5-10s), Nova Canvas comparable
+- **Edits:** Nano Banana most reliable, Nova Canvas best for natural language instructions
 - **Videos:** Use webhooks for long generations (don't wait on page)
 - **Storage:** Clean up old media periodically to save disk space
 
 ### Cost Management
 
 - **Track usage** - Check the Usage page regularly
-- **Imagen 4:** Most expensive but highest quality (~$0.08)
+- **Imagen 4 & Nova Canvas:** Most expensive but highest quality (~$0.08)
 - **Editing models:** Cheaper (~$0.03-0.05)
 - **Videos:** Most expensive (~$4.00 for 8s)
 - **Save only final versions** - Don't save every iteration
@@ -1235,6 +1258,8 @@ predictions {
 ### Documentation
 
 - **Replicate API:** https://replicate.com/docs
+- **AWS Bedrock:** https://docs.aws.amazon.com/bedrock/
+- **Nova Canvas:** https://docs.aws.amazon.com/nova/latest/userguide/
 - **Next.js:** https://nextjs.org/docs
 - **Prisma:** https://www.prisma.io/docs
 - **AWS Cognito:** https://docs.aws.amazon.com/cognito/
@@ -1244,6 +1269,7 @@ predictions {
 
 - **[Imagen 4 Ultra](https://replicate.com/google/imagen-4-ultra)** - Image generation
 - **[Nano Banana](https://replicate.com/google/nano-banana)** - Generation + editing
+- **[Nova Canvas](https://aws.amazon.com/bedrock/nova/)** - AWS Bedrock natural language editing
 - **[Qwen Image Edit Plus](https://replicate.com/qwen/qwen-image-edit-plus)** - ControlNet editing
 - **[SeedEdit 3.0](https://replicate.com/bytedance/seededit-3.0)** - Precise edits
 - **[Seedream 4](https://replicate.com/bytedance/seedream-4)** - High-res editing
@@ -1252,7 +1278,8 @@ predictions {
 ### Pricing
 
 - **Replicate Pricing:** https://replicate.com/pricing
-- Costs are based on GPU time used
+- **AWS Bedrock Pricing:** https://aws.amazon.com/bedrock/pricing/
+- Costs are based on GPU time used (Replicate) or per-inference (AWS Bedrock)
 - Check Usage dashboard for your spending
 
 ---
@@ -1262,7 +1289,7 @@ predictions {
 **Visual Neurons is a complete AI creative platform that's:**
 
 - ✅ **Simple** - Screen + npm run dev, no complex build steps
-- ✅ **Powerful** - 6 AI models for images and videos
+- ✅ **Powerful** - 7 AI models for images and videos (Replicate + AWS Bedrock)
 - ✅ **Secure** - AWS Cognito + nginx + HTTPS
 - ✅ **Fast** - Hot reload, instant feedback
 - ✅ **Beautiful** - Modern UI with dark mode
@@ -1284,6 +1311,7 @@ This app includes:
 - TypeScript + Tailwind CSS + Prisma ORM
 - SQLite database with local file storage
 - Beautiful chat interface
+- Multi-provider AI integration (Replicate + AWS Bedrock)
 
 **Authentication & Security:**
 - AWS Cognito integration (username/password)
@@ -1299,11 +1327,12 @@ This app includes:
 - Route53 DNS integration
 
 **Features:**
-- Image generation (Imagen 4, Nano Banana)
-- Image editing (4 models to choose from)
+- Image generation (Imagen 4, Nano Banana, Nova Canvas)
+- Image editing (5 models: Nova Canvas, Nano Banana, Qwen, SeedEdit, Seedream)
+- Natural language masking with Nova Canvas (AWS Bedrock)
 - Video generation (Veo 3.1 with audio)
 - Gallery with media management
-- Usage tracking and cost estimates
+- Usage tracking and cost estimates (Replicate + AWS Bedrock)
 - Webhook support for async processing
 
 **All running on a single EC2 instance with simple, maintainable architecture!** 🚀

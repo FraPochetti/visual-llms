@@ -18,14 +18,14 @@ type Message = {
     timestamp: Date;
 };
 
-type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4';
+type EditModel = 'nano-banana' | 'qwen-image-edit-plus' | 'seededit-3.0' | 'seedream-4' | 'nova-canvas';
 
 function ChatPageContent() {
     const searchParams = useSearchParams();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [mode, setMode] = useState<'create' | 'edit' | 'video'>('create');
-    const [selectedModel, setSelectedModel] = useState<'imagen4' | 'nano-banana'>('imagen4');
+    const [selectedModel, setSelectedModel] = useState<'imagen4' | 'nano-banana' | 'nova-canvas'>('imagen4');
     const [selectedEditModel, setSelectedEditModel] = useState<EditModel>('nano-banana');
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -323,10 +323,17 @@ function ChatPageContent() {
             }
 
             // Create assistant message based on mode
+            let messageContent = data.message || 'Processed successfully!';
+
+            // Add debug info for Nova Canvas edits
+            if (data.debug && data.debug.maskPrompt) {
+                messageContent += `\n\n_Edited area: "${data.debug.maskPrompt}"_`;
+            }
+
             const assistantMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: data.message || 'Processed successfully!',
+                content: messageContent,
                 imageUrl: data.imageUrl,
                 imageId: data.imageId,
                 videoUrl: data.videoUrl,
@@ -788,6 +795,18 @@ function ChatPageContent() {
                                     Nano Banana
                                 </span>
                             </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="nova-canvas"
+                                    checked={selectedModel === 'nova-canvas'}
+                                    onChange={(e) => setSelectedModel(e.target.value as 'nova-canvas')}
+                                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    Nova Canvas <span className="text-xs text-gray-500">(AWS Bedrock)</span>
+                                </span>
+                            </label>
                         </div>
                     )}
 
@@ -801,6 +820,7 @@ function ChatPageContent() {
                                         {selectedEditModel === 'qwen-image-edit-plus' && 'Qwen Image Edit Plus'}
                                         {selectedEditModel === 'seededit-3.0' && 'SeedEdit 3.0'}
                                         {selectedEditModel === 'seedream-4' && 'Seedream 4'}
+                                        {selectedEditModel === 'nova-canvas' && 'Nova Canvas'}
                                     </span>
                                 </span>
                                 <button
@@ -810,7 +830,7 @@ function ChatPageContent() {
                                     {showEditModelOptions ? '▼ Hide Models' : '▶ Change Model'}
                                 </button>
                             </div>
-                            
+
                             {showEditModelOptions && (
                                 <div className="grid gap-2 sm:grid-cols-2 mt-3">
                                     <label className={`flex items-center gap-2 px-3 py-2 rounded border transition cursor-pointer ${selectedEditModel === 'nano-banana'
@@ -873,6 +893,56 @@ function ChatPageContent() {
                                             <div className="text-xs text-gray-500 dark:text-gray-400">High-res creative editing up to 4K</div>
                                         </div>
                                     </label>
+                                    <label className={`flex items-center gap-2 px-3 py-2 rounded border transition cursor-pointer ${selectedEditModel === 'nova-canvas'
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400'}`}>
+                                        <input
+                                            type="radio"
+                                            value="nova-canvas"
+                                            checked={selectedEditModel === 'nova-canvas'}
+                                            onChange={(e) => setSelectedEditModel(e.target.value as EditModel)}
+                                            className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                                        />
+                                        <div>
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">Nova Canvas</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">Natural language masking (AWS)</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
+
+                            {/* Nova Canvas Tips - shown when models expanded and Nova Canvas is selected */}
+                            {showEditModelOptions && selectedEditModel === 'nova-canvas' && (
+                                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                        💡 Nova Canvas Prompting Tips
+                                    </p>
+                                    <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5">
+                                        <p className="font-medium">Use simple, direct instructions:</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                            <div>
+                                                <p className="text-green-700 dark:text-green-400 font-medium">✓ Works well:</p>
+                                                <ul className="mt-1 space-y-0.5 ml-2">
+                                                    <li>• "change the sky to sunset"</li>
+                                                    <li>• "remove the bird"</li>
+                                                    <li>• "make the car blue"</li>
+                                                    <li>• "replace the tree with a building"</li>
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <p className="text-red-700 dark:text-red-400 font-medium">✗ Avoid:</p>
+                                                <ul className="mt-1 space-y-0.5 ml-2">
+                                                    <li>• "make it look like sunset"</li>
+                                                    <li>• "change everything darker"</li>
+                                                    <li>• "remove what's in the background"</li>
+                                                    <li>• "make the sky as if it was sunset"</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
+                                            Pattern: <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">[action] the [object] [outcome]</code>
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                         </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { generateImage, generateImageWithImagen4 } from '@/lib/replicate';
+import { generateImageWithNovaCanvas } from '@/lib/bedrock';
 import { saveMediaFile } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
@@ -26,6 +27,12 @@ export async function POST(request: NextRequest) {
                 mimeType = result.mimeType;
                 modelName = 'imagen-4.0-ultra-generate-001';
                 provider = 'google-imagen4';
+            } else if (model === 'nova-canvas') {
+                const result = await generateImageWithNovaCanvas(prompt);
+                imageData = result.imageData;
+                mimeType = result.mimeType;
+                modelName = 'amazon.nova-canvas-v1:0';
+                provider = 'aws-nova-canvas';
             } else {
                 const result = await generateImage(prompt);
                 imageData = result.imageData;
@@ -90,6 +97,8 @@ export async function POST(request: NextRequest) {
 
         const successMessage = model === 'imagen4'
             ? 'Image generated successfully with Imagen 4!'
+            : model === 'nova-canvas'
+            ? 'Image generated successfully with Nova Canvas!'
             : 'Image generated successfully with Nano Banana!';
 
         return NextResponse.json({

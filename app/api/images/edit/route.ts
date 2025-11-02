@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { editImage, type EditModel } from '@/lib/replicate';
+import { editImageWithNovaCanvas } from '@/lib/bedrock';
 import { readMediaFile, saveMediaFile } from '@/lib/storage';
 import path from 'path';
 
@@ -10,6 +11,7 @@ const MODEL_LABELS: Record<EditModel, string> = {
     'qwen-image-edit-plus': 'Qwen Image Edit Plus',
     'seededit-3.0': 'SeedEdit 3.0',
     'seedream-4': 'Seedream 4',
+    'nova-canvas': 'Nova Canvas',
 };
 
 const PROVIDER_MAP: Record<EditModel, string> = {
@@ -17,6 +19,7 @@ const PROVIDER_MAP: Record<EditModel, string> = {
     'qwen-image-edit-plus': 'qwen-image-edit-plus',
     'seededit-3.0': 'seededit-3.0',
     'seedream-4': 'seedream-4',
+    'nova-canvas': 'aws-nova-canvas',
 };
 
 const REPLICATE_MODEL_MAP: Record<EditModel, string> = {
@@ -24,6 +27,7 @@ const REPLICATE_MODEL_MAP: Record<EditModel, string> = {
     'qwen-image-edit-plus': 'qwen/qwen-image-edit-plus',
     'seededit-3.0': 'bytedance/seededit-3.0',
     'seedream-4': 'bytedance/seedream-4',
+    'nova-canvas': 'amazon.nova-canvas-v1:0',
 };
 
 export async function POST(request: NextRequest) {
@@ -32,7 +36,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { imageId, instruction } = body;
         const requestedModel = typeof body.model === 'string' ? body.model : undefined;
-        const allowedModels = ['nano-banana', 'qwen-image-edit-plus', 'seededit-3.0', 'seedream-4'] as const satisfies readonly EditModel[];
+        const allowedModels = ['nano-banana', 'qwen-image-edit-plus', 'seededit-3.0', 'seedream-4', 'nova-canvas'] as const satisfies readonly EditModel[];
         const isEditModel = (value: string): value is EditModel => (allowedModels as readonly string[]).includes(value);
 
         let selectedModel: EditModel = 'nano-banana';
@@ -80,14 +84,26 @@ export async function POST(request: NextRequest) {
         };
         const originalMimeType = mimeTypeMap[ext] || 'image/png';
 
-        // Edit image via selected Replicate model
+        // Edit image via selected model (Replicate or Bedrock)
         let editedImageData: string;
         let editedMimeType: string;
+        let maskPrompt: string | undefined;
 
         try {
-            const result = await editImage(imageBuffer, instruction, originalMimeType, selectedModel);
-            editedImageData = result.imageData;
-            editedMimeType = result.mimeType;
+            if (selectedModel === 'nova-canvas') {
+                // Use AWS Bedrock Nova Canvas
+                const imageBase64 = imageBuffer.toString('base64');
+                const dataUri = `data:${originalMimeType};base64,${imageBase64}`;
+                const result = await editImageWithNovaCanvas(dataUri, instruction);
+                editedImageData = result.imageData;
+                editedMimeType = result.mimeType;
+                maskPrompt = result.maskPrompt;
+            } else {
+                // Use Replicate models
+                const result = await editImage(imageBuffer, instruction, originalMimeType, selectedModel);
+                editedImageData = result.imageData;
+                editedMimeType = result.mimeType;
+            }
         } catch (geminiError: any) {
             console.error('Replicate API error during editing:', geminiError);
 
@@ -145,14 +161,24 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        return NextResponse.json({
+        const response: any = {
             success: true,
             message: `Image edited successfully with ${MODEL_LABELS[selectedModel]}!`,
             imageUrl: `/api/media/${relativePath}`,
             imageId: editedAsset.id,
             originalImageId: imageId,
             asset: editedAsset,
-        });
+        };
+
+        // Add debug info for Nova Canvas
+        if (selectedModel === 'nova-canvas' && maskPrompt) {
+            response.debug = {
+                maskPrompt,
+                instruction,
+            };
+        }
+
+        return NextResponse.json(response);
     } catch (error) {
         console.error('Error editing image:', error);
         return NextResponse.json(

@@ -10,6 +10,7 @@ type PeriodStats = {
     qwenImageEditPlus: number;
     seedEdit3: number;
     seedream4: number;
+    novaCanvas: number;
     veo31: number;
     total: number;
     cost: number;
@@ -106,6 +107,16 @@ export default function UsagePage() {
                             </span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.seedream4} {period.seedream4 === 1 ? 'op' : 'ops'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://aws.amazon.com/bedrock/nova/" target="_blank" className="underline hover:text-blue-600">
+                                    Nova Canvas
+                                </Link>:
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {period.novaCanvas} {period.novaCanvas === 1 ? 'op' : 'ops'}
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
@@ -243,14 +254,21 @@ export default function UsagePage() {
                                 </p>
                                 <p>
                                     <strong>
+                                        <Link href="https://aws.amazon.com/bedrock/pricing/" target="_blank" className="underline hover:text-blue-600">
+                                            Nova Canvas (AWS Bedrock)
+                                        </Link>:
+                                    </strong> $0.08 per 2048×2048 premium image
+                                </p>
+                                <p>
+                                    <strong>
                                         <Link href="https://replicate.com/google/veo-3.1" target="_blank" className="underline hover:text-blue-600">
                                             Veo 3.1
                                         </Link>:
                                     </strong> $3.20 per 8-second video ($0.40/second, includes native audio)
                                 </p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
-                                    Costs are estimates based on Replicate pricing. Actual costs may vary based on runtime, hardware, resolution, and batch mode.
-                                    See <a href="https://replicate.com/pricing" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Replicate pricing</a> for details.
+                                    Costs are estimates based on Replicate and AWS Bedrock pricing. Actual costs may vary based on runtime, hardware, resolution, and quality settings.
+                                    See <a href="https://replicate.com/pricing" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Replicate pricing</a> and <a href="https://aws.amazon.com/bedrock/pricing/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">AWS Bedrock pricing</a> for details.
                                 </p>
                             </div>
                         </div>
