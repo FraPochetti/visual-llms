@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { generateImage, generateImageWithImagen4 } from '@/lib/replicate';
-import { generateImageWithNovaCanvas } from '@/lib/bedrock';
+import { generateImageWithNovaCanvas, explainErrorWithClaude } from '@/lib/bedrock';
 import { saveMediaFile } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
@@ -43,20 +43,39 @@ export async function POST(request: NextRequest) {
         } catch (geminiError: any) {
             console.error('Image generation API error:', geminiError);
 
-            // Provide helpful error message
+            // Skip Claude for auth errors - these need immediate fixing
             if (geminiError.message?.includes('API key') || geminiError.message?.includes('auth')) {
                 return NextResponse.json(
-                    { error: 'Invalid or missing Replicate API key. Please check your .env file.' },
+                    { error: 'Invalid or missing API key. Please check your .env file.' },
                     { status: 401 }
                 );
             }
 
-            return NextResponse.json({
-                success: false,
-                error: 'Image generation failed.',
-                message: geminiError.message || 'An error occurred during image generation.',
-                prompt,
-            }, { status: 500 });
+            // Use Claude to explain the error and suggest a fix
+            try {
+                const claude = await explainErrorWithClaude(
+                    geminiError.message || 'Unknown error',
+                    prompt,
+                    { model, mode: 'generation' }
+                );
+                
+                return NextResponse.json({
+                    success: false,
+                    error: 'Image generation failed',
+                    message: claude.explanation,
+                    suggestedPrompt: claude.suggestedFix,
+                    originalPrompt: prompt,
+                }, { status: 500 });
+            } catch (claudeError) {
+                // Fallback if Claude fails
+                console.error('Claude error explanation failed:', claudeError);
+                return NextResponse.json({
+                    success: false,
+                    error: 'Image generation failed',
+                    message: geminiError.message || 'An error occurred during image generation.',
+                    originalPrompt: prompt,
+                }, { status: 500 });
+            }
         }
 
         // Convert base64 to buffer

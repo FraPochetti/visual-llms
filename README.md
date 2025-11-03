@@ -1,6 +1,6 @@
 # Visual Neurons
 
-A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nova Canvas** (AWS Bedrock) for natural language editing, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat.
+A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nova Canvas** (AWS Bedrock) for natural language editing, **Claude 4.5 Sonnet** (AWS Bedrock) for intelligent error assistance with vision, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat with intelligent assistance.
 
 **Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API • AWS Bedrock
 
@@ -719,6 +719,8 @@ npx prisma studio
 **✅ Core Features:**
 - Beautiful chat interface with dark mode
 - Create/Edit/Video mode toggle
+- ✨ Proactive prompt improvement with Claude 4.5 Sonnet vision
+- Intelligent error assistance with Claude 4.5 Sonnet vision
 - Auto-scroll to latest content
 - Image and video display inline
 - Gallery with filtering and multi-select
@@ -731,6 +733,7 @@ npx prisma studio
 - **Imagen 4 Ultra** - Highest-quality image generation (2K resolution)
 - **Nano Banana** - Versatile generation + editing
 - **Nova Canvas (AWS Bedrock)** - 2K premium image generation + natural language editing
+- **Claude 4.5 Sonnet (AWS Bedrock)** - Vision-powered error explanation and prompt assistance
 - **Qwen Image Edit Plus** - ControlNet-aware editing
 - **SeedEdit 3.0** - Detail-preserving targeted edits
 - **Seedream 4** - High-resolution editing up to 4K
@@ -738,6 +741,9 @@ npx prisma studio
 
 **✅ Production Features:**
 - AWS Cognito authentication (username/password)
+- AWS Bedrock integration (Nova Canvas + Claude 4.5 Sonnet)
+- ✨ Proactive prompt improvement (Claude vision)
+- Intelligent error handling (Claude vision)
 - Nginx reverse proxy with SSL/HTTPS
 - Screen session management (simple & reliable!)
 - Route53 DNS integration
@@ -763,6 +769,7 @@ npx prisma studio
 - **Imagen 4:** Best quality images, fastest generation
 - **Nano Banana:** Great for maintaining likeness in edits
 - **Nova Canvas:** Automatic masking via natural language, high-quality 2K premium output (AWS Bedrock)
+- **Claude 4.5 Sonnet:** Proactive prompt improvement + automatic error assistant with vision capabilities
 - **Qwen Image Edit Plus:** When you need structural guidance or multi-image consistency
 - **SeedEdit 3.0:** Precise changes (lighting, removals) with minimal side effects
 - **Seedream 4:** Style transfers and high-resolution creative reworks
@@ -772,12 +779,43 @@ npx prisma studio
 
 ## 💡 Writing Good Prompts
 
+### ✨ Improve Prompt Feature
+
+**Not sure how to write a good prompt?** Click the **✨ Improve Prompt** button!
+
+Claude 4.5 Sonnet will:
+- 🔍 **Analyze your prompt** (and see your images in edit/video mode)
+- 💡 **Give you concise tips** on how to improve it
+- 🎨 **Provide 2 specific examples** of your prompt made significantly better
+- ⚡ **Auto-fill the first example** in your input field for easy use
+
+**Example:**
+```
+You type: "a car"
+Click: ✨ Improve Prompt
+
+Claude shows:
+Original prompt: "a car"
+
+Tips to improve: Add specific style, lighting, composition, and quality details
+
+2 examples of improved prompt:
+1. "A sleek sports car with metallic midnight blue paint, dramatic studio 
+    lighting, low three-quarter angle, photorealistic, 8K detail"
+2. "A vintage classic car on wet cobblestone street at golden hour, 
+    cinematic composition, warm tones, shallow depth of field"
+
+[First example auto-filled in input - ready to send or edit further!]
+```
+
 ### For Image Generation
 
 Be specific and include details:
 - *"A photorealistic portrait of a cat with blue eyes, studio lighting, bokeh background"*
 - *"Futuristic city skyline at night, neon lights, cyberpunk style"*
 - *"Minimalist product photo, white background, professional lighting"*
+
+💡 **Tip:** Use **✨ Improve Prompt** to turn simple ideas into detailed prompts!
 
 ### For Image Editing
 
@@ -806,6 +844,69 @@ Nova Canvas uses automatic masking - just describe what to change. The app shows
 **Pattern:** `[action] the [object] [outcome]`
 
 The app will automatically extract the object to edit (e.g., "sky" from "change the sky to sunset") and show you what was detected in the response for transparency.
+
+### Intelligent Error Assistance (Claude 4.5 Sonnet Vision)
+
+When errors occur, **Claude 4.5 Sonnet automatically analyzes them** and provides helpful feedback:
+
+**What Claude Does:**
+- 🔍 **Sees your image** (for editing errors) and understands what you're trying to do
+- 💬 **Explains the error** in friendly, plain language
+- ✨ **Suggests a fix** that actually works
+- ⚡ **Auto-fills the input** with the corrected prompt for easy retry
+
+**Example Error Flow:**
+
+```
+You: "Make the hair blonde"
+Image: [Mountain landscape with trees]
+
+Claude sees the image and responds:
+"This image shows a mountain landscape with autumn trees and sky. 
+There are no people or hair to edit. Did you mean to change the 
+tree colors instead?"
+
+💡 Try this instead:
+"change the trees to golden yellow"
+
+[Input auto-filled with the suggestion - just click Send!]
+```
+
+**No button needed** - Claude automatically helps whenever something goes wrong!
+
+### Proactive Prompt Improvement (Claude 4.5 Sonnet Vision)
+
+Before submitting your prompt, click **✨ Improve Prompt** to get Claude's expert suggestions:
+
+**How It Works:**
+- Type your prompt (can be as simple as "a cat" or "remove the dog")
+- Click **✨ Improve Prompt** button (appears next to Send)
+- Claude analyzes your prompt + any selected images
+- Get instant feedback with 2 improved examples
+- First example auto-fills in the input field
+
+**Context-Aware by Mode:**
+- **Create Mode:** Claude adds style, lighting, composition details
+- **Edit Mode:** Claude sees the image and suggests realistic edits
+- **Video Mode:** Claude sees frame images and adds camera work, pacing
+
+**Example in Edit Mode:**
+```
+You type: "make hair blonde"
+Image: [Mountain landscape]
+
+Claude responds:
+Original prompt: "make hair blonde"
+
+Tips to improve: This image shows a landscape with no people. 
+Suggest editing elements actually present in the scene.
+
+2 examples of improved prompt:
+1. "change the trees to golden yellow autumn foliage"
+2. "transform the sky to warm golden hour lighting"
+```
+
+**Saves you from wasted API calls** by catching mistakes before submission!
 
 ### For Video Generation
 
@@ -856,7 +957,7 @@ visual-llms/
 │   └── layout.tsx        # Root layout
 ├── lib/
 │   ├── replicate.ts      # Replicate API integration
-│   ├── bedrock.ts        # AWS Bedrock Nova Canvas integration
+│   ├── bedrock.ts        # AWS Bedrock (Nova Canvas + Claude 4.5 Sonnet)
 │   ├── auth-server.ts    # AWS Cognito server-side auth
 │   ├── auth-client.ts    # Cognito client-side auth
 │   ├── prisma.ts         # Database client
@@ -1230,11 +1331,12 @@ predictions {
 
 ### Best Practices
 
-1. **Save selectively** - Only save images you want to keep (prevents gallery clutter)
-2. **Chain edits** - Build up complex changes step by step
-3. **Use undo** - Click "← Previous" if you don't like an edit
-4. **Try different models** - Each has strengths for different tasks
-5. **Watch screen logs** - See what's happening in real-time
+1. **Use ✨ Improve Prompt** - Get Claude's expert suggestions before generating
+2. **Save selectively** - Only save images you want to keep (prevents gallery clutter)
+3. **Chain edits** - Build up complex changes step by step
+4. **Use undo** - Click "← Previous" if you don't like an edit
+5. **Try different models** - Each has strengths for different tasks
+6. **Watch screen logs** - See what's happening in real-time
 
 ### Performance Tips
 
@@ -1260,6 +1362,7 @@ predictions {
 - **Replicate API:** https://replicate.com/docs
 - **AWS Bedrock:** https://docs.aws.amazon.com/bedrock/
 - **Nova Canvas:** https://docs.aws.amazon.com/nova/latest/userguide/
+- **Claude (Anthropic):** https://docs.anthropic.com/
 - **Next.js:** https://nextjs.org/docs
 - **Prisma:** https://www.prisma.io/docs
 - **AWS Cognito:** https://docs.aws.amazon.com/cognito/
@@ -1270,6 +1373,7 @@ predictions {
 - **[Imagen 4 Ultra](https://replicate.com/google/imagen-4-ultra)** - Image generation
 - **[Nano Banana](https://replicate.com/google/nano-banana)** - Generation + editing
 - **[Nova Canvas](https://aws.amazon.com/bedrock/nova/)** - AWS Bedrock natural language editing
+- **[Claude 4.5 Sonnet](https://www.anthropic.com/claude)** - AWS Bedrock vision-powered error assistant
 - **[Qwen Image Edit Plus](https://replicate.com/qwen/qwen-image-edit-plus)** - ControlNet editing
 - **[SeedEdit 3.0](https://replicate.com/bytedance/seededit-3.0)** - Precise edits
 - **[Seedream 4](https://replicate.com/bytedance/seedream-4)** - High-res editing
@@ -1330,6 +1434,8 @@ This app includes:
 - Image generation (Imagen 4, Nano Banana, Nova Canvas)
 - Image editing (5 models: Nova Canvas, Nano Banana, Qwen, SeedEdit, Seedream)
 - Natural language masking with Nova Canvas (AWS Bedrock)
+- ✨ Proactive prompt improvement with Claude 4.5 Sonnet vision
+- Intelligent error handling with Claude 4.5 Sonnet vision
 - Video generation (Veo 3.1 with audio)
 - Gallery with media management
 - Usage tracking and cost estimates (Replicate + AWS Bedrock)

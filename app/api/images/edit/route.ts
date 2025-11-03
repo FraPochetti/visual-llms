@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { editImage, type EditModel } from '@/lib/replicate';
-import { editImageWithNovaCanvas } from '@/lib/bedrock';
+import { editImageWithNovaCanvas, explainErrorWithClaude } from '@/lib/bedrock';
 import { readMediaFile, saveMediaFile } from '@/lib/storage';
 import path from 'path';
 
@@ -105,21 +105,47 @@ export async function POST(request: NextRequest) {
                 editedMimeType = result.mimeType;
             }
         } catch (geminiError: any) {
-            console.error('Replicate API error during editing:', geminiError);
+            console.error('Image editing API error:', geminiError);
 
+            // Skip Claude for auth errors - these need immediate fixing
             if (geminiError.message?.includes('API key') || geminiError.message?.includes('auth')) {
                 return NextResponse.json(
-                    { error: 'Invalid or missing Replicate API key. Please check your .env file.' },
+                    { error: 'Invalid or missing API key. Please check your .env file.' },
                     { status: 401 }
                 );
             }
 
-            return NextResponse.json({
-                success: false,
-                error: 'Image editing failed',
-                message: geminiError.message || `${MODEL_LABELS[selectedModel]} encountered an error processing your image.`,
-                originalImageId: imageId,
-            }, { status: 500 });
+            // Use Claude to explain the error and suggest a fix
+            try {
+                const claude = await explainErrorWithClaude(
+                    geminiError.message || 'Unknown error',
+                    instruction,
+                    { 
+                        model: selectedModel,
+                        mode: 'editing',
+                        extractedMaskPrompt: maskPrompt,
+                        imageBase64: imageBuffer.toString('base64')
+                    }
+                );
+                
+                return NextResponse.json({
+                    success: false,
+                    error: 'Image editing failed',
+                    message: claude.explanation,
+                    suggestedPrompt: claude.suggestedFix,
+                    originalPrompt: instruction,
+                    originalImageId: imageId,
+                }, { status: 500 });
+            } catch (claudeError) {
+                // Fallback if Claude fails
+                console.error('Claude error explanation failed:', claudeError);
+                return NextResponse.json({
+                    success: false,
+                    error: 'Image editing failed',
+                    message: geminiError.message || `${MODEL_LABELS[selectedModel]} encountered an error processing your image.`,
+                    originalImageId: imageId,
+                }, { status: 500 });
+            }
         }
 
         // Convert base64 to buffer

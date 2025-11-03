@@ -304,7 +304,11 @@ function ChatPageContent() {
                 response = await fetch('/api/images/edit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imageId: selectedImage, instruction: input, model: selectedEditModel }),
+                    body: JSON.stringify({
+                        imageId: selectedImage,
+                        instruction: input,
+                        model: selectedEditModel
+                    }),
                 });
             }
 
@@ -312,13 +316,26 @@ function ChatPageContent() {
 
             // Handle both success and error responses
             if (!response.ok || !data.success) {
+                let errorContent = data.message || data.error || `Failed to process ${mode === 'video' ? 'video' : 'image'}`;
+
+                // Add suggested fix if Claude provided one
+                if (data.suggestedPrompt && data.originalPrompt !== data.suggestedPrompt) {
+                    errorContent += `\n\n💡 Try this instead:\n"${data.suggestedPrompt}"`;
+                }
+
                 const errorMessage: Message = {
                     id: (Date.now() + 1).toString(),
                     role: 'assistant',
-                    content: data.error || data.message || `Failed to process ${mode === 'video' ? 'video' : 'image'}`,
+                    content: errorContent,
                     timestamp: new Date(),
                 };
                 setMessages(prev => [...prev, errorMessage]);
+
+                // Auto-populate the suggested prompt in the input
+                if (data.suggestedPrompt) {
+                    setInput(data.suggestedPrompt);
+                }
+
                 return;
             }
 
@@ -367,6 +384,74 @@ function ChatPageContent() {
         } finally {
             setIsLoading(false);
             setLoadingProgress(0);
+        }
+    };
+
+    const handleImprovePrompt = async () => {
+        if (!input.trim() || isLoading) return;
+        
+        setIsLoading(true);
+        
+        try {
+            // Gather context based on mode
+            const requestBody: any = {
+                prompt: input,
+                mode: mode
+            };
+            
+            // Add image for edit mode
+            if (mode === 'edit' && selectedImage) {
+                requestBody.imageId = selectedImage;
+            }
+            
+            // Add frame images for video mode
+            if (mode === 'video') {
+                const frames = [];
+                if (firstFrameId) frames.push(firstFrameId);
+                if (lastFrameId) frames.push(lastFrameId);
+                if (videoGenerationMode === 'reference') {
+                    frames.push(...referenceImageIds);
+                }
+                if (frames.length > 0) {
+                    requestBody.frameIds = frames;
+                }
+            }
+            
+            const response = await fetch('/api/prompts/improve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show improvement as a chat message
+                const improvementMessage: Message = {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: `Original prompt: "${data.original}"\n\nTips to improve: ${data.improvements}\n\n2 examples of improved prompt:\n1. "${data.improved}"\n2. "${data.example2}"`,
+                    timestamp: new Date()
+                };
+                
+                setMessages(prev => [...prev, improvementMessage]);
+                
+                // Auto-fill the first improved prompt
+                setInput(data.improved);
+            } else {
+                throw new Error(data.error || 'Failed to improve prompt');
+            }
+        } catch (error) {
+            console.error('Error improving prompt:', error);
+            const errorMsg: Message = {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: 'Sorry, I couldn\'t improve the prompt right now. Please try again.',
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -485,11 +570,11 @@ function ChatPageContent() {
                                 >
                                     <p className="whitespace-pre-wrap">{message.content}</p>
                                     {message.imageUrl && (
-                                        <div className="mt-3">
+                                        <div className="mt-3 relative">
                                             <img
                                                 src={message.imageUrl}
                                                 alt="Generated"
-                                                className={`rounded-lg max-w-md cursor-pointer hover:opacity-90 transition ${selectedImage === message.imageId
+                                                className={`rounded-lg max-w-md hover:opacity-90 transition cursor-pointer ${selectedImage === message.imageId
                                                     ? 'ring-4 ring-blue-500'
                                                     : ''
                                                     }`}
@@ -1207,7 +1292,7 @@ function ChatPageContent() {
                     )}
 
                     {/* Input form */}
-                    <form onSubmit={handleSubmit} className="flex space-x-2">
+                    <form onSubmit={handleSubmit} className="flex gap-2">
                         <input
                             type="text"
                             value={input}
@@ -1216,6 +1301,19 @@ function ChatPageContent() {
                             className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:bg-gray-700 dark:text-white"
                             disabled={isLoading}
                         />
+                        {/* Improve Prompt Button - show when user has typed something */}
+                        {input.trim() && (
+                            <button
+                                type="button"
+                                onClick={handleImprovePrompt}
+                                disabled={isLoading}
+                                className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                                title="Get Claude's suggestions to improve your prompt"
+                            >
+                                <span>✨</span>
+                                <span className="hidden sm:inline">Improve</span>
+                            </button>
+                        )}
                         <button
                             type="submit"
                             disabled={isLoading || !input.trim()}
