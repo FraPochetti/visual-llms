@@ -603,17 +603,24 @@ function ChatPageContent() {
                                                         <>
                                                             <button
                                                                 onClick={() => {
-                                                                    setSelectedImage(message.imageId!);
-                                                                    setSelectedImageUrl(message.imageUrl!);
-                                                                    setMode('edit');
+                                                                    if (selectedImage === message.imageId) {
+                                                                        // Deselect if clicking the already selected image
+                                                                        setSelectedImage(null);
+                                                                        setSelectedImageUrl(null);
+                                                                    } else {
+                                                                        // Select this image
+                                                                        setSelectedImage(message.imageId!);
+                                                                        setSelectedImageUrl(message.imageUrl!);
+                                                                        setMode('edit');
+                                                                    }
                                                                 }}
                                                                 className={`text-xs px-2 py-1 rounded transition ${selectedImage === message.imageId
-                                                                    ? 'bg-green-600 text-white'
+                                                                    ? 'bg-green-600 text-white hover:bg-green-700'
                                                                     : 'bg-blue-600/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600/30'
                                                                     }`}
-                                                                title="Select this image for editing"
+                                                                title={selectedImage === message.imageId ? "Click to deselect" : "Select this image for editing"}
                                                             >
-                                                                {selectedImage === message.imageId ? '✓ Selected' : 'Edit This'}
+                                                                {selectedImage === message.imageId ? '✓ Selected (click to deselect)' : 'Edit This'}
                                                             </button>
                                                             {mode === 'video' && (
                                                                 <>
@@ -852,11 +859,32 @@ function ChatPageContent() {
                         >
                             🎬 Video
                         </button>
-                        {selectedImage && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Image selected ✓
-                            </span>
+
+                        {/* Edit mode: show image status and upload option */}
+                        {mode === 'edit' && (
+                            <div className="flex items-center gap-2">
+                                {selectedImage ? (
+                                    <button
+                                        onClick={() => {
+                                            setSelectedImage(null);
+                                            setSelectedImageUrl(null);
+                                        }}
+                                        className="text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
+                                        title="Click to deselect and choose a different image"
+                                    >
+                                        ✓ Image Selected (click to change)
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600/30 transition"
+                                    >
+                                        📤 Upload Image
+                                    </button>
+                                )}
+                            </div>
                         )}
+
                         <input
                             ref={fileInputRef}
                             type="file"

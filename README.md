@@ -410,12 +410,18 @@ For a **single-user app** where you're the only one using it:
 ### Edit Images
 
 1. Select **"Edit selected"** mode
-2. Upload an image or select from gallery
+2. **Choose your image source:**
+   - **From chat:** Click "Edit This" on any generated image in the conversation
+     - Button turns green: "✓ Selected (click to deselect)"
+     - Click again to deselect and choose a different image
+   - **Upload new:** Click "📤 Upload Image" button to select a file from your computer
+   - **Switch sources:** Click the green "✓ Image Selected" button to deselect and choose differently
 3. **Pick an editing model** - Click "▶ Change Model" to expand
    - **Nano Banana** (default) - Best all-rounder, maintains likenesses
    - **Qwen Image Edit Plus** - ControlNet-aware, multi-image consistency
    - **SeedEdit 3.0** - Precise adjustments, preserves details
    - **Seedream 4** - High-resolution edits up to 4K
+   - **Nova Canvas** - Natural language editing with optional precision masking
 4. Describe the change: *"Make the sky purple and add stars"*
 5. Click **Send**
 6. **Chain edits**: Keep editing the result!
@@ -1535,6 +1541,19 @@ predictions {
 4. **Use undo** - Click "← Previous" if you don't like an edit
 5. **Try different models** - Each has strengths for different tasks
 6. **Watch screen logs** - See what's happening in real-time
+7. **Switch image sources easily** - Click selected images to deselect, or use "📤 Upload Image" to choose a different file
+
+### UI Tips
+
+- **Selecting images for editing:**
+  - Click "Edit This" on any image in chat → turns green "✓ Selected"
+  - Already selected? Click again to deselect and choose differently
+  - Green button in top bar shows what's selected
+  - Upload button appears when no image is selected
+- **Clear visual feedback:**
+  - Green = currently selected
+  - Blue = available to select
+  - All selection buttons are clickable to toggle
 
 ### Performance Tips
 
