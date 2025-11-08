@@ -34,7 +34,7 @@ export async function GET() {
         });
 
         // Helper to count and calculate cost
-        const calculateStats = (assets: typeof allAssets) => {
+        const calculateStats = async (assets: typeof allAssets, startDate: Date) => {
             const imagen4Count = assets.filter(a => a.provider === 'google-imagen4').length;
             const nanoBananaCount = assets.filter(a => a.provider === 'gemini-nano-banana').length;
             const qwenCount = assets.filter(a => a.provider === 'qwen-image-edit-plus').length;
@@ -43,6 +43,15 @@ export async function GET() {
             const novaCanvasCount = assets.filter(a => a.provider === 'aws-nova-canvas').length;
             const veo31Count = assets.filter(a => a.provider === 'google-veo-3.1').length;
 
+            // Count mask generations from actions table
+            const maskGenerationCount = await prisma.action.count({
+                where: {
+                    userId: sessionId,
+                    action: 'mask_generated',
+                    createdAt: { gte: startDate }
+                }
+            });
+
             const imagen4Cost = calculateCost('google-imagen4', imagen4Count);
             const nanoBananaCost = calculateCost('gemini-nano-banana', nanoBananaCount);
             const qwenCost = calculateCost('qwen-image-edit-plus', qwenCount);
@@ -50,6 +59,7 @@ export async function GET() {
             const seedream4Cost = calculateCost('seedream-4', seedream4Count);
             const novaCanvasCost = calculateCost('aws-nova-canvas', novaCanvasCount);
             const veo31Cost = calculateCost('google-veo-3.1', veo31Count);
+            const maskCost = maskGenerationCount * 0.0014; // Grounded SAM cost
 
             return {
                 imagen4: imagen4Count,
@@ -59,25 +69,29 @@ export async function GET() {
                 seedream4: seedream4Count,
                 novaCanvas: novaCanvasCount,
                 veo31: veo31Count,
-                total: imagen4Count + nanoBananaCount + qwenCount + seedEdit3Count + seedream4Count + novaCanvasCount + veo31Count,
-                cost: imagen4Cost + nanoBananaCost + qwenCost + seedEdit3Cost + seedream4Cost + novaCanvasCost + veo31Cost,
+                maskGenerations: maskGenerationCount,
+                total: imagen4Count + nanoBananaCount + qwenCount + seedEdit3Count + seedream4Count + novaCanvasCount + veo31Count + maskGenerationCount,
+                cost: imagen4Cost + nanoBananaCost + qwenCost + seedEdit3Cost + seedream4Cost + novaCanvasCost + veo31Cost + maskCost,
             };
         };
 
         // Calculate stats for each time period
-        const today = calculateStats(
-            allAssets.filter(a => a.createdAt >= todayStart)
+        const today = await calculateStats(
+            allAssets.filter(a => a.createdAt >= todayStart),
+            todayStart
         );
 
-        const thisWeek = calculateStats(
-            allAssets.filter(a => a.createdAt >= weekStart)
+        const thisWeek = await calculateStats(
+            allAssets.filter(a => a.createdAt >= weekStart),
+            weekStart
         );
 
-        const thisMonth = calculateStats(
-            allAssets.filter(a => a.createdAt >= monthStart)
+        const thisMonth = await calculateStats(
+            allAssets.filter(a => a.createdAt >= monthStart),
+            monthStart
         );
 
-        const allTime = calculateStats(allAssets);
+        const allTime = await calculateStats(allAssets, new Date(0)); // All time starts from epoch
 
         return NextResponse.json({
             success: true,

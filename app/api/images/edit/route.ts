@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     try {
         const sessionId = await getOrCreateSession();
         const body = await request.json();
-        const { imageId, instruction } = body;
+        const { imageId, instruction, maskBase64 } = body;  // Add maskBase64
         const requestedModel = typeof body.model === 'string' ? body.model : undefined;
         const allowedModels = ['nano-banana', 'qwen-image-edit-plus', 'seededit-3.0', 'seedream-4', 'nova-canvas'] as const satisfies readonly EditModel[];
         const isEditModel = (value: string): value is EditModel => (allowedModels as readonly string[]).includes(value);
@@ -94,7 +94,9 @@ export async function POST(request: NextRequest) {
                 // Use AWS Bedrock Nova Canvas
                 const imageBase64 = imageBuffer.toString('base64');
                 const dataUri = `data:${originalMimeType};base64,${imageBase64}`;
-                const result = await editImageWithNovaCanvas(dataUri, instruction);
+                const result = await editImageWithNovaCanvas(dataUri, instruction, {
+                    maskImageBase64: maskBase64  // Pass manual mask if provided
+                });
                 editedImageData = result.imageData;
                 editedMimeType = result.mimeType;
                 maskPrompt = result.maskPrompt;
@@ -120,14 +122,14 @@ export async function POST(request: NextRequest) {
                 const claude = await explainErrorWithClaude(
                     geminiError.message || 'Unknown error',
                     instruction,
-                    { 
+                    {
                         model: selectedModel,
                         mode: 'editing',
                         extractedMaskPrompt: maskPrompt,
                         imageBase64: imageBuffer.toString('base64')
                     }
                 );
-                
+
                 return NextResponse.json({
                     success: false,
                     error: 'Image editing failed',

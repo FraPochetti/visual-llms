@@ -33,6 +33,10 @@ export const API_PRICING = {
     // Source: https://aws.amazon.com/bedrock/pricing/
     NOVA_CANVAS_PREMIUM_2K: 0.08,
 
+    // Grounded SAM on Replicate
+    // Pricing: ~$0.0014 per mask generation
+    GROUNDED_SAM: 0.0014,
+
     // Veo 3.1 on Replicate
     // Estimated: ~$4.00 per 8-second video (based on GPU time)
     VEO_3_1_PER_VIDEO: 4.00,

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { MaskGenerator } from '@/components/MaskGenerator';
 
 type Message = {
     id: string;
@@ -48,6 +49,11 @@ function ChatPageContent() {
     const [generateAudio, setGenerateAudio] = useState<boolean>(true);
     const [showVideoOptions, setShowVideoOptions] = useState<boolean>(false); // Collapse by default to save space
     const [showEditModelOptions, setShowEditModelOptions] = useState<boolean>(false); // Collapse edit model selector
+
+    // Mask generation states
+    const [showMaskGenerator, setShowMaskGenerator] = useState(false);
+    const [generatedMaskBase64, setGeneratedMaskBase64] = useState<string | null>(null);
+    const [maskPreview, setMaskPreview] = useState<string | null>(null);
 
     // Handle images from gallery (single or multiple)
     useEffect(() => {
@@ -162,6 +168,12 @@ function ChatPageContent() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // Clear mask when selected image changes (temporary mask pattern)
+    useEffect(() => {
+        setGeneratedMaskBase64(null);
+        setMaskPreview(null);
+    }, [selectedImage]);
 
     // Clear chat history
     const clearChat = () => {
@@ -307,7 +319,8 @@ function ChatPageContent() {
                     body: JSON.stringify({
                         imageId: selectedImage,
                         instruction: input,
-                        model: selectedEditModel
+                        model: selectedEditModel,
+                        maskBase64: (selectedEditModel === 'nova-canvas' && generatedMaskBase64) ? generatedMaskBase64 : undefined
                     }),
                 });
             }
@@ -389,21 +402,21 @@ function ChatPageContent() {
 
     const handleImprovePrompt = async () => {
         if (!input.trim() || isLoading) return;
-        
+
         setIsLoading(true);
-        
+
         try {
             // Gather context based on mode
             const requestBody: any = {
                 prompt: input,
                 mode: mode
             };
-            
+
             // Add image for edit mode
             if (mode === 'edit' && selectedImage) {
                 requestBody.imageId = selectedImage;
             }
-            
+
             // Add frame images for video mode
             if (mode === 'video') {
                 const frames = [];
@@ -416,15 +429,15 @@ function ChatPageContent() {
                     requestBody.frameIds = frames;
                 }
             }
-            
+
             const response = await fetch('/api/prompts/improve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 // Show improvement as a chat message
                 const improvementMessage: Message = {
@@ -433,9 +446,9 @@ function ChatPageContent() {
                     content: `Original prompt: "${data.original}"\n\nTips to improve: ${data.improvements}\n\n2 examples of improved prompt:\n1. "${data.improved}"\n2. "${data.example2}"`,
                     timestamp: new Date()
                 };
-                
+
                 setMessages(prev => [...prev, improvementMessage]);
-                
+
                 // Auto-fill the first improved prompt
                 setInput(data.improved);
             } else {
@@ -1030,6 +1043,42 @@ function ChatPageContent() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Mask Generator Button - Nova Canvas only, shown when options expanded */}
+                            {showEditModelOptions && selectedEditModel === 'nova-canvas' && selectedImageUrl && (
+                                <div className="mt-3">
+                                    <button
+                                        onClick={() => setShowMaskGenerator(true)}
+                                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                        </svg>
+                                        🎯 Generate Precision Mask
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Mask Status Indicator - always visible when mask is active */}
+                            {selectedEditModel === 'nova-canvas' && maskPreview && (
+                                <div className="mt-3 flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span className="text-sm text-green-700 dark:text-green-300 font-medium">Mask active</span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setGeneratedMaskBase64(null);
+                                            setMaskPreview(null);
+                                        }}
+                                        className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1324,6 +1373,21 @@ function ChatPageContent() {
                     </form>
                 </div>
             </div>
+
+            {/* Mask Generator Modal */}
+            {showMaskGenerator && selectedImageUrl && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                    <MaskGenerator
+                        imageUrl={selectedImageUrl}
+                        onMaskGenerated={(maskBase64, preview) => {
+                            setGeneratedMaskBase64(maskBase64);
+                            setMaskPreview(preview);
+                            setShowMaskGenerator(false);
+                        }}
+                        onCancel={() => setShowMaskGenerator(false)}
+                    />
+                </div>
+            )}
         </div>
     );
 }

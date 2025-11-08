@@ -1,6 +1,6 @@
 # Visual Neurons
 
-A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nova Canvas** (AWS Bedrock) for natural language editing, **Claude 4.5 Sonnet** (AWS Bedrock) for intelligent error assistance with vision, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat with intelligent assistance.
+A complete creative AI platform with **image and video generation**: **Imagen 4** for high-fidelity images, **Nova Canvas** (AWS Bedrock) for natural language editing with optional **Grounded SAM** precision masking, **Claude 4.5 Sonnet** (AWS Bedrock) for intelligent error assistance with vision, **Nano Banana**, **Qwen Image Edit Plus**, **SeedEdit 3.0**, and **Seedream 4** for creative editing, and **Veo 3.1** for cinematic video generation with audio. Create, edit, and generate through natural language chat with intelligent assistance.
 
 **Tech Stack:** Next.js 15 • React 19 • TypeScript • Tailwind CSS • Prisma • SQLite • Replicate API • AWS Bedrock
 
@@ -156,7 +156,7 @@ This runs `npm run dev` in a screen session, giving you:
 cd /home/ubuntu/visual-llms
 
 # Start the app in a screen session
-screen -dmS visualneurons npm run dev
+   screen -dmS visualneurons npm run dev
 
 # Verify it's running
 screen -ls
@@ -732,7 +732,8 @@ npx prisma studio
 **✅ AI Models:**
 - **Imagen 4 Ultra** - Highest-quality image generation (2K resolution)
 - **Nano Banana** - Versatile generation + editing
-- **Nova Canvas (AWS Bedrock)** - 2K premium image generation + natural language editing
+- **Nova Canvas (AWS Bedrock)** - 2K premium image generation + natural language editing + precision masking
+- **Grounded SAM** - AI-powered precision mask generation for Nova Canvas
 - **Claude 4.5 Sonnet (AWS Bedrock)** - Vision-powered error explanation and prompt assistance
 - **Qwen Image Edit Plus** - ControlNet-aware editing
 - **SeedEdit 3.0** - Detail-preserving targeted edits
@@ -759,6 +760,7 @@ npx prisma studio
 | **Imagen 4 Ultra** | Photorealistic images | 2K (2048×2048) | ~$0.08/image (Replicate) |
 | **Nano Banana** | Creative edits, variations | 1024×1024 | ~$0.05/image (Replicate) |
 | **Nova Canvas** | Natural language editing | 2K (2048×2048) Premium | $0.08/image (AWS Bedrock) |
+| **Grounded SAM** | Precision mask generation | Original size | $0.0014/mask (Replicate) |
 | **Qwen Image Edit Plus** | ControlNet, multi-image | Configurable | $0.03/image (Replicate) |
 | **SeedEdit 3.0** | Precise adjustments | Original size | $0.03/image (Replicate) |
 | **Seedream 4** | High-res edits, styles | Up to 4K | $0.03/image (Replicate) |
@@ -769,6 +771,7 @@ npx prisma studio
 - **Imagen 4:** Best quality images, fastest generation
 - **Nano Banana:** Great for maintaining likeness in edits
 - **Nova Canvas:** Automatic masking via natural language, high-quality 2K premium output (AWS Bedrock)
+- **Grounded SAM:** AI-powered precision masking for Nova Canvas when natural language isn't precise enough
 - **Claude 4.5 Sonnet:** Proactive prompt improvement + automatic error assistant with vision capabilities
 - **Qwen Image Edit Plus:** When you need structural guidance or multi-image consistency
 - **SeedEdit 3.0:** Precise changes (lighting, removals) with minimal side effects
@@ -844,6 +847,187 @@ Nova Canvas uses automatic masking - just describe what to change. The app shows
 **Pattern:** `[action] the [object] [outcome]`
 
 The app will automatically extract the object to edit (e.g., "sky" from "change the sky to sunset") and show you what was detected in the response for transparency.
+
+### 🎯 Precision Mask Generation with Grounded SAM (Nova Canvas Only)
+
+When Nova Canvas's natural language masking isn't precise enough, use **AI-powered mask generation** for pixel-perfect control.
+
+**What It Does:**
+- Uses [Grounded SAM](https://replicate.com/schananas/grounded_sam) to segment objects via text prompts
+- Generates precise black/white masks compatible with Nova Canvas
+- Shows visual preview with red tint overlay (red=preserve, darkened=edit)
+- Integrates seamlessly with Nova Canvas editing workflow
+
+---
+
+#### When to Use Precision Masks
+
+**Use Grounded SAM When:**
+- ✅ Complex scenes with multiple similar objects
+- ✅ Need surgical precision (e.g., only one specific object)
+- ✅ Natural language masking gives unexpected results
+- ✅ Editing small or intricate areas
+
+**Use Natural Language Masking When:**
+- ✅ Simple scenes with clear subject
+- ✅ Quick edits without perfect precision
+- ✅ Entire object categories (e.g., "all sky")
+
+---
+
+#### How to Use
+
+1. **Switch to Edit mode** and select **Nova Canvas** model
+2. **Select your image** for editing
+3. **Click "🎯 Generate Precision Mask"** button
+4. **Enter what to segment:**
+   - Simple prompts: `person`, `shirt`, `car`, `flower`
+   - Multiple objects: `person . shirt . face`
+5. **Optional:** Add negative prompt to exclude areas (e.g., `background`)
+6. **Preview the mask overlay:**
+   - Red tint = areas that will be preserved
+   - Darkened areas (no red) = areas that will be edited
+7. **Click "Use This Mask"** to activate it
+8. **Enter your edit instruction** as normal (e.g., "change to blue")
+9. **Submit** - Nova Canvas edits only the masked areas!
+
+---
+
+#### Examples
+
+**Simple Object Segmentation:**
+```
+Image: Sunset landscape with a pink flower
+Mask Prompt: "flower"
+Result: Only the flower is masked
+Edit Instruction: "make it blue"
+Result: Blue flower, landscape untouched ✅
+```
+
+**With Negative Prompt:**
+```
+Image: Person wearing a red shirt outdoors
+Mask Prompt: "shirt"
+Negative Prompt: "background"
+Result: Only the shirt is masked, background excluded
+Edit Instruction: "make it striped"
+Result: Striped shirt, everything else preserved ✅
+```
+
+**Multiple Elements:**
+```
+Image: Portrait photo
+Mask Prompt: "person . shirt . face"
+Result: Person, their shirt, and face all masked
+Edit Instruction: "professional headshot lighting"
+Result: Improved lighting on masked areas only ✅
+```
+
+---
+
+#### Tips & Best Practices
+
+**Prompting:**
+- ✅ **Simple, clear words:** "person", "car", "tree", "sky", "building"
+- ✅ **Be specific:** "red car" better than just "car" in multi-car scenes
+- ✅ **Use dots for multiple:** "person . shirt . hat"
+- ❌ **Avoid vague terms:** ~~"stuff"~~, ~~"thing"~~, ~~"area"~~
+
+**Understanding Behavior:**
+- 🔍 **Grounded SAM segments ALL instances** - If you type "person" with 5 people, all 5 are masked
+- 🎯 **Masks are temporary** - Cleared when you select a different image (by design)
+- 💡 **Check the preview** - Red tint shows what will be preserved
+
+**Cost:**
+- 💰 **~$0.0014 per mask** (99¢ generates ~700 masks!)
+- 💰 **Much cheaper than wasted Nova Canvas edits** (~$0.08 each)
+
+**Workflow:**
+1. Generate mask (preview shows exactly what will be edited)
+2. If wrong area: Regenerate with different prompt
+3. If correct area: Use mask + edit with Nova Canvas
+4. For next image: Generate new mask (old one clears automatically)
+
+---
+
+#### Visual Preview Explained
+
+The mask overlay uses **Photoshop-style visualization**:
+
+```
+Background: Semi-transparent red (30% opacity)
+Masked areas: Multiply blend mode removes red
+Result:
+  • Darkened areas (no red tint) = WILL BE EDITED ✏️
+  • Red-tinted areas = WILL BE PRESERVED 🔒
+```
+
+This makes it crystal clear what Nova Canvas will edit vs. preserve.
+
+---
+
+#### Technical Details
+
+**What Happens Behind the Scenes:**
+
+1. **API Call** - Image + prompt sent to Grounded SAM on Replicate
+2. **Segmentation** - AI identifies all instances of the prompt
+3. **Mask Generation** - Returns 4 outputs:
+   - `annotated_picture_mask.jpg` (visualization with boxes)
+   - `neg_annotated_picture_mask.jpg` (negative version)
+   - `mask.jpg` (pure mask: white=object, black=background)
+   - `inverted_mask.jpg` (inverted: black=object, white=background)
+4. **Selection** - App selects `mask.jpg` (the pure mask)
+5. **Inversion** - Colors inverted for Nova Canvas compatibility:
+   - Grounded SAM: white=object, black=background
+   - Nova Canvas: **black=edit, white=preserve**
+6. **Storage** - Saved to `/var/visualneurons/media/{sessionId}/mask_*.png`
+7. **Preview** - Displayed with red tint overlay
+8. **Usage** - Sent to Nova Canvas as `maskImage` parameter (base64)
+
+**Key Files:**
+- `lib/segmentation.ts` - Grounded SAM API integration + mask inversion
+- `app/api/masks/generate/route.ts` - Mask generation API endpoint
+- `components/MaskGenerator.tsx` - UI component for mask generation
+- `lib/bedrock.ts` - Nova Canvas integration with `maskImage` parameter
+
+---
+
+#### Troubleshooting
+
+**"No objects matching 'X' were found"**
+- ✅ Try a simpler, more general prompt (e.g., "person" instead of "person in red shirt")
+- ✅ Check object is clearly visible in the image
+- ✅ Try alternative terms (e.g., "automobile" vs "car")
+
+**Mask shows wrong area**
+- ✅ Add negative prompt to exclude unwanted areas
+- ✅ Be more specific in prompt (e.g., "blue car" if multiple cars)
+- ✅ Regenerate with different wording
+
+**Mask segments too many objects**
+- 💡 This is normal - Grounded SAM finds ALL instances
+- 💡 Future updates will add brush/eraser tools to refine masks
+- 💡 For now: Use more specific prompts or negative prompts
+
+**Preview looks weird**
+- ✅ Darkened areas (no red) = will be edited ✏️
+- ✅ Red-tinted areas = will be preserved 🔒
+- ✅ This is correct Photoshop-style visualization!
+
+---
+
+#### Future Enhancements
+
+Planned features for mask refinement (Phase 2):
+
+- 🖌️ **Brush tool** - Add to mask manually
+- 🧹 **Eraser tool** - Remove from mask manually
+- 📏 **Brush size slider** - Adjust precision
+- 🔍 **Zoom controls** - Fine-tune edges
+- ↶ **Undo/Redo** - Step through changes
+
+**Current Status:** MVP shipped and working! Refinement tools will be added based on user feedback.
 
 ### Intelligent Error Assistance (Claude 4.5 Sonnet Vision)
 
@@ -949,15 +1133,24 @@ For local development with ngrok:
 ```
 visual-llms/
 ├── app/
-│   ├── api/              # API routes (create, edit, video, gallery, auth)
+│   ├── api/              # API routes
+│   │   ├── images/       # Create, edit, save images
+│   │   ├── masks/        # Mask generation (Grounded SAM)
+│   │   ├── videos/       # Video generation
+│   │   ├── gallery/      # Gallery management
+│   │   └── auth/         # Cognito authentication
 │   ├── gallery/          # Gallery page
 │   ├── login/            # Login page (Cognito)
 │   ├── usage/            # Usage dashboard
 │   ├── page.tsx          # Main chat interface
 │   └── layout.tsx        # Root layout
+├── components/
+│   ├── MaskGenerator.tsx # Precision mask UI component
+│   └── ...               # Other components
 ├── lib/
 │   ├── replicate.ts      # Replicate API integration
 │   ├── bedrock.ts        # AWS Bedrock (Nova Canvas + Claude 4.5 Sonnet)
+│   ├── segmentation.ts   # Grounded SAM integration + mask inversion
 │   ├── auth-server.ts    # AWS Cognito server-side auth
 │   ├── auth-client.ts    # Cognito client-side auth
 │   ├── prisma.ts         # Database client
@@ -974,7 +1167,11 @@ visual-llms/
 ├── middleware.ts         # Auth middleware (route protection)
 └── /var/visualneurons/   # Data storage
     ├── db.sqlite         # SQLite database
-    └── media/            # Image & video files
+    └── media/            # Image, video & mask files
+        └── {sessionId}/  # Per-session storage
+            ├── image_*.png
+            ├── mask_*.png
+            └── video_*.mp4
 ```
 
 ---
@@ -1269,6 +1466,7 @@ cp /var/visualneurons/db.sqlite.backup /var/visualneurons/db.sqlite
 | `/api/images/[id]` | GET | Get image details |
 | `/api/images/[id]/save` | POST | Mark image as saved |
 | `/api/images/[id]/delete` | DELETE | Delete image |
+| `/api/masks/generate` | POST | Generate precision mask (Grounded SAM) |
 | `/api/videos/create` | POST | Generate video |
 | `/api/gallery` | GET | List saved media |
 | `/api/usage` | GET | Get usage statistics |
@@ -1434,6 +1632,7 @@ This app includes:
 - Image generation (Imagen 4, Nano Banana, Nova Canvas)
 - Image editing (5 models: Nova Canvas, Nano Banana, Qwen, SeedEdit, Seedream)
 - Natural language masking with Nova Canvas (AWS Bedrock)
+- 🎯 **Precision mask generation with Grounded SAM** - AI-powered segmentation for surgical edits
 - ✨ Proactive prompt improvement with Claude 4.5 Sonnet vision
 - Intelligent error handling with Claude 4.5 Sonnet vision
 - Video generation (Veo 3.1 with audio)
@@ -1533,6 +1732,100 @@ UPDATE actions SET userId = 'NEW_ID' WHERE userId = 'OLD_ID';
 ```
 
 **Key Learning:** Session-based isolation is powerful for multi-user support but requires migration when switching authentication methods.
+
+---
+
+**5. Grounded SAM Mask Generation Integration**
+
+**The Goal:**
+Add AI-powered precision masking to Nova Canvas for surgical editing precision.
+
+**The Journey - Three Critical Bugs:**
+
+**Bug #1: Wrong Parameter Names**
+```
+Error: "cannot reshape tensor of 0 elements"
+Symptom: Grounded SAM returned 0 detections even with clearly visible objects
+```
+
+**Root Cause:**
+- Was using `prompt` and `negative_prompt` parameters
+- Replicate API actually expects `mask_prompt` and `negative_mask_prompt`
+- Also tried using non-existent `box_threshold` and `text_threshold` parameters
+
+**Solution:**
+```typescript
+// Before (WRONG):
+input: {
+  prompt: "flower",
+  negative_prompt: "",
+  box_threshold: 0.3,
+  text_threshold: 0.25
+}
+
+// After (CORRECT):
+input: {
+  mask_prompt: "flower",              // Fixed parameter name
+  negative_mask_prompt: "",           // Fixed parameter name
+  adjustment_factor: 0                // Correct parameter for erosion/dilation
+}
+```
+
+**Bug #2: Hardcoded MIME Type**
+```
+Error: Still getting 0 detections after fixing parameter names
+```
+
+**Root Cause:**
+- Was hardcoding all images as `data:image/png;base64,...`
+- Actual uploaded image was JPEG
+- Grounded SAM couldn't decode mismatched format
+
+**Solution:**
+```typescript
+// Extract actual MIME type from uploaded file
+const imageMimeType = imageFile.type || 'image/jpeg';
+
+// Use real MIME type in data URI
+image: `data:${mimeType};base64,${imageBase64}`
+```
+
+**Bug #3: Showing Annotated Image Instead of Pure Mask**
+```
+Symptom: Mask preview showed green bounding boxes instead of solid overlay
+```
+
+**Root Cause:**
+- Grounded SAM returns 4 outputs in array:
+  - `annotated_picture_mask.jpg` (visualization with boxes)
+  - `neg_annotated_picture_mask.jpg` (negative version)
+  - `mask.jpg` (pure black/white mask)
+  - `inverted_mask.jpg` (already inverted)
+- Was blindly taking first output (the annotated one)
+
+**Solution:**
+```typescript
+// Smart selection logic
+const pureMask = result.output.find((url: string) => 
+  url.includes('mask') && !url.includes('annotated')
+);
+maskUrl = pureMask || result.output[result.output.length - 1];
+```
+
+**The Result:**
+- ✅ Mask generation working perfectly
+- ✅ Correct pure mask selected and inverted
+- ✅ Beautiful Photoshop-style red tint preview
+- ✅ Seamless integration with Nova Canvas
+
+**Files Created:**
+- `lib/segmentation.ts` - Grounded SAM API + mask inversion logic
+- `app/api/masks/generate/route.ts` - Mask generation endpoint
+- `components/MaskGenerator.tsx` - UI with preview and controls
+- Updated `lib/bedrock.ts` - Added `maskImage` parameter support
+- Updated `app/api/images/edit/route.ts` - Pass masks to Nova Canvas
+
+**Key Learning:** Always check API documentation for exact parameter names! Generic names like "prompt" vs "mask_prompt" can cause silent failures.
 
 ---
 

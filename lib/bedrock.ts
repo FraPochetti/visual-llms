@@ -94,11 +94,14 @@ export async function generateImageWithNovaCanvas(prompt: string): Promise<{
 
 /**
  * Edit an image using Amazon Nova Canvas (INPAINTING)
- * Uses natural language masking to identify which part of the image to edit
+ * Uses natural language masking OR manual mask image to identify which part to edit
  */
 export async function editImageWithNovaCanvas(
     dataUri: string,
-    instruction: string
+    instruction: string,
+    options?: {
+        maskImageBase64?: string;  // Optional manual mask (black=edit, white=preserve)
+    }
 ): Promise<{
     imageData: string;
     mimeType: string;
@@ -108,15 +111,11 @@ export async function editImageWithNovaCanvas(
         // Extract base64 data from data URI
         const base64Data = dataUri.split(',')[1] || dataUri;
 
-        // Extract mask prompt from instruction
-        const maskPrompt = extractMaskPrompt(instruction);
-
         const requestBody: any = {
             taskType: "INPAINTING",
             inPaintingParams: {
                 image: base64Data,
                 text: instruction,
-                maskPrompt: maskPrompt
             },
             imageGenerationConfig: {
                 numberOfImages: 1,
@@ -125,7 +124,18 @@ export async function editImageWithNovaCanvas(
             },
         };
 
-        console.log('Nova Canvas editing with maskPrompt:', { instruction, maskPrompt });
+        // Use manual mask if provided, otherwise use maskPrompt
+        let maskPrompt: string | undefined;
+        if (options?.maskImageBase64) {
+            // Manual mask provided - use maskImage parameter
+            requestBody.inPaintingParams.maskImage = options.maskImageBase64;
+            console.log('Nova Canvas editing with manual maskImage');
+        } else {
+            // No manual mask - extract maskPrompt from instruction
+            maskPrompt = extractMaskPrompt(instruction);
+            requestBody.inPaintingParams.maskPrompt = maskPrompt;
+            console.log('Nova Canvas editing with maskPrompt:', { instruction, maskPrompt });
+        }
 
         const command = new InvokeModelCommand({
             modelId: "amazon.nova-canvas-v1:0",

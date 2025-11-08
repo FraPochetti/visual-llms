@@ -12,6 +12,7 @@ type PeriodStats = {
     seedream4: number;
     novaCanvas: number;
     veo31: number;
+    maskGenerations: number;  // Add this
     total: number;
     cost: number;
 };
@@ -127,6 +128,16 @@ export default function UsagePage() {
                             </span>
                             <span className="font-medium text-gray-900 dark:text-white">
                                 {period.veo31} {period.veo31 === 1 ? 'video' : 'videos'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                                <Link href="https://replicate.com/schananas/grounded_sam" target="_blank" className="underline hover:text-blue-600">
+                                    Grounded SAM
+                                </Link>:
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                                {period.maskGenerations} {period.maskGenerations === 1 ? 'mask' : 'masks'}
                             </span>
                         </div>
                     </div>
@@ -258,6 +269,13 @@ export default function UsagePage() {
                                             Nova Canvas (AWS Bedrock)
                                         </Link>:
                                     </strong> $0.08 per 2048×2048 premium image
+                                </p>
+                                <p>
+                                    <strong>
+                                        <Link href="https://replicate.com/schananas/grounded_sam" target="_blank" className="underline hover:text-blue-600">
+                                            Grounded SAM
+                                        </Link>:
+                                    </strong> $0.0014 per mask generation
                                 </p>
                                 <p>
                                     <strong>
