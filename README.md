@@ -718,6 +718,66 @@ npx prisma studio
 
 ---
 
+#### Video Not Appearing in Gallery
+
+**Issue: Video generated successfully but doesn't show in gallery**
+
+This was caused by the middleware blocking webhook callbacks from Replicate.
+
+**The Fix (Already Applied):**
+
+The middleware now whitelists `/api/webhooks` so external services can POST completion notifications:
+
+```typescript
+// In middleware.ts
+if (pathname === '/login' || 
+    pathname.startsWith('/_next') || 
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/webhooks')) {  // ← Webhooks allowed!
+```
+
+**What Was Happening:**
+1. Video generation succeeded on Replicate
+2. Replicate tried to POST to `/api/webhooks/replicate`
+3. Middleware redirected to `/login` (307) because no auth cookie
+4. Replicate couldn't follow redirect → webhook never processed
+5. Video stayed in `processing` state, never saved to gallery
+
+**Result:** ✅ All future videos now auto-save when complete!
+
+**Recovery Script (If You Have Stuck Videos):**
+
+If you have videos that were generated before the fix, you can recover them:
+
+```bash
+# Find stuck predictions
+npx prisma studio
+# Look for predictions with status='processing' but completed on Replicate
+
+# Recover a stuck video
+node scripts/recover-video.js <prediction_db_id>
+
+# Example
+node scripts/recover-video.js 8e055e81-ab4b-45a9-a0f1-a5a642c7bb5a
+# ✅ Downloaded 16.83 MB
+# ✅ Saved to gallery
+```
+
+**Verify the Fix:**
+
+```bash
+# Before fix - returned 307 redirect
+curl https://visualneurons.com/api/webhooks/replicate -X POST
+
+# After fix - returns JSON response
+curl https://visualneurons.com/api/webhooks/replicate -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"id":"test","status":"processing"}'
+# {"error":"Prediction not found"}  ✅ JSON, not redirect!
+```
+
+---
+
 ## 🎨 Features & Models
 
 ### What's in This App
@@ -739,7 +799,7 @@ npx prisma studio
 - **Imagen 4 Ultra** - Highest-quality image generation (2K resolution)
 - **Nano Banana** - Versatile generation + editing
 - **Nova Canvas (AWS Bedrock)** - 2K premium image generation + natural language editing + precision masking
-- **Grounded SAM** - AI-powered precision mask generation for Nova Canvas
+- **Grounded SAM** - AI-powered precision mask generation with manual editing tools for Nova Canvas
 - **Claude 4.5 Sonnet (AWS Bedrock)** - Vision-powered error explanation and prompt assistance
 - **Qwen Image Edit Plus** - ControlNet-aware editing
 - **SeedEdit 3.0** - Detail-preserving targeted edits
@@ -862,6 +922,7 @@ When Nova Canvas's natural language masking isn't precise enough, use **AI-power
 - Uses [Grounded SAM](https://replicate.com/schananas/grounded_sam) to segment objects via text prompts
 - Generates precise black/white masks compatible with Nova Canvas
 - Shows visual preview with red tint overlay (red=preserve, darkened=edit)
+- **NEW:** ✏️ Manual mask editing with brush/eraser tools for fine-tuned control
 - Integrates seamlessly with Nova Canvas editing workflow
 
 ---
@@ -893,9 +954,40 @@ When Nova Canvas's natural language masking isn't precise enough, use **AI-power
 6. **Preview the mask overlay:**
    - Red tint = areas that will be preserved
    - Darkened areas (no red) = areas that will be edited
-7. **Click "Use This Mask"** to activate it
-8. **Enter your edit instruction** as normal (e.g., "change to blue")
-9. **Submit** - Nova Canvas edits only the masked areas!
+7. **🆕 OPTIONAL: Click "Edit Mask"** to manually refine the mask:
+   - **Brush tool (B):** Add black pixels to the mask (mark for editing)
+   - **Eraser tool (E):** Add white pixels to the mask (preserve area)
+   - Adjust brush size (5-100px)
+   - Undo/Redo support
+   - Visual cursor preview shows where you'll draw
+   - Image stays visible underneath for context
+8. **Click "Use This Mask"** to activate it
+9. **Enter your edit instruction** as normal (e.g., "change to blue")
+10. **Submit** - Nova Canvas edits only the masked areas!
+
+---
+
+#### Manual Mask Editing
+
+**When You Need It:**
+- Image has 5 people, you want to edit only the leftmost one
+- SAM segments too much or too little
+- You need pixel-perfect control over specific regions
+
+**Tools Available:**
+- 🖌️ **Brush:** Paint black (add to edit area)
+- 🧹 **Eraser:** Paint white (remove from edit area)
+- **Brush size slider:** 5-100px
+- **Undo/Redo:** Navigate edit history (up to 20 states)
+- **Reset:** Restore original AI-generated mask
+- **Clear All:** Make entire mask black or white
+
+**Keyboard Shortcuts:**
+- `B` - Switch to Brush
+- `E` - Switch to Eraser
+- `Ctrl/Cmd + Z` - Undo
+- `Ctrl/Cmd + Shift + Z` - Redo
+- `Esc` - Close editor
 
 ---
 
@@ -918,6 +1010,17 @@ Negative Prompt: "background"
 Result: Only the shirt is masked, background excluded
 Edit Instruction: "make it striped"
 Result: Striped shirt, everything else preserved ✅
+```
+
+**With Manual Editing:**
+```
+Image: 5 people standing in a row
+Mask Prompt: "person"
+Result: All 5 people are masked
+Manual Edit: Use eraser to remove 4 people from mask
+Final Mask: Only leftmost person is masked
+Edit Instruction: "make their shirt blue"
+Result: Only the leftmost person's shirt turns blue ✅
 ```
 
 **Multiple Elements:**
@@ -1020,6 +1123,13 @@ This makes it crystal clear what Nova Canvas will edit vs. preserve.
 - ✅ Darkened areas (no red) = will be edited ✏️
 - ✅ Red-tinted areas = will be preserved 🔒
 - ✅ This is correct Photoshop-style visualization!
+
+**"Taking too long / Queued on Replicate"**
+- ⏱️ Normal during busy times - Replicate queues can be 2-3 minutes
+- ⏱️ App now waits up to 3 minutes automatically
+- 💡 UI shows "Queued on Replicate..." after 30 seconds
+- 💡 Consider using Replicate during off-peak hours
+- 💰 Enterprise Replicate plans offer faster queue times (not free)
 
 ---
 
@@ -1754,7 +1864,48 @@ UPDATE actions SET userId = 'NEW_ID' WHERE userId = 'OLD_ID';
 
 ---
 
-**5. Grounded SAM Mask Generation Integration**
+**5. Middleware Blocking Webhooks**
+
+**Initial Problem:**
+- Video generation succeeded on Replicate (shown in their dashboard)
+- Video never appeared in gallery
+- Prediction stuck in "processing" status forever
+- No error messages
+
+**Root Cause:**
+- Middleware was redirecting ALL unauthenticated requests to `/login` (307 redirect)
+- Replicate's webhook callbacks don't have authentication cookies
+- Webhook got redirected → never processed → video lost
+- Testing revealed: `curl https://visualneurons.com/api/webhooks/replicate` returned `307 Temporary Redirect`
+
+**Solution:**
+```typescript
+// middleware.ts - Whitelist webhook endpoints
+if (pathname === '/login' || 
+    pathname.startsWith('/_next') || 
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/webhooks')) {  // ← Added this!
+    return NextResponse.next();
+}
+```
+
+**Recovery:**
+Created `scripts/recover-video.js` to manually fetch and save videos that were stuck:
+```bash
+node scripts/recover-video.js 8e055e81-ab4b-45a9-a0f1-a5a642c7bb5a
+# ✅ Downloaded 16.83 MB
+# ✅ Saved to gallery
+```
+
+**Files Changed:**
+- `middleware.ts` - Whitelist `/api/webhooks` path
+- `scripts/recover-video.js` - Recovery script for stuck videos
+
+**Key Learning:** External webhooks need unauthenticated access! Always whitelist webhook endpoints in authentication middleware, or external services can't deliver callbacks.
+
+---
+
+**6. Grounded SAM Mask Generation Integration**
 
 **The Goal:**
 Add AI-powered precision masking to Nova Canvas for surgical editing precision.
@@ -1845,6 +1996,75 @@ maskUrl = pureMask || result.output[result.output.length - 1];
 - Updated `app/api/images/edit/route.ts` - Pass masks to Nova Canvas
 
 **Key Learning:** Always check API documentation for exact parameter names! Generic names like "prompt" vs "mask_prompt" can cause silent failures.
+
+---
+
+**7. Manual Mask Editing for Precision Control**
+
+**The Goal:**
+Allow users to manually refine AI-generated masks when Grounded SAM segments too much or too little.
+
+**The Problem:**
+```
+Scenario: Image has 5 people, user types "person"
+Result: All 5 people get masked
+Desired: Only edit the leftmost person
+Current limitation: No way to refine the mask!
+```
+
+**The Solution:**
+Built a canvas-based mask editor with brush/eraser tools for manual refinement.
+
+**Implementation:**
+
+**New Component: `MaskEditor.tsx` (465 lines)**
+- Dual-canvas setup: background (original image) + foreground (editable mask with red tint)
+- Drawing engine: mouse/touch events with brush and eraser tools
+- Brush size control: 5-100px slider
+- Undo/Redo system: 20-state history with ImageData snapshots
+- Visual feedback: cursor preview circle shows brush size
+- Keyboard shortcuts: B=Brush, E=Eraser, Ctrl+Z=Undo, Esc=Close
+- Auto-scaling: images >1024px downscaled for performance
+
+**Updated: `MaskGenerator.tsx`**
+- Added "Edit Mask" button (3-column layout: Regenerate | Edit | Use)
+- Tracks original AI-generated mask separately from edited version
+- Shows indicator when mask has been manually edited
+- Modal integration for MaskEditor component
+
+**Visual Behavior:**
+```
+Canvas Layer Stack (bottom to top):
+┌─────────────────────────────┐
+│ Original Image (visible)    │ ← Context for drawing
+├─────────────────────────────┤
+│ Semi-transparent Red Mask   │ ← What you're editing
+│ • Black pixels = no tint    │   (areas to edit)
+│ • White pixels = red tint   │   (areas to preserve)
+└─────────────────────────────┘
+```
+
+**Usage Example:**
+1. Generate mask with "person" → all 5 people masked
+2. Click "Edit Mask" → editor opens
+3. Select Eraser tool
+4. Paint over 4 people to preserve → red tint appears
+5. Only leftmost person remains dark (will be edited)
+6. Apply → Nova Canvas edits only that person
+
+**The Result:**
+- ✅ Pixel-perfect mask control
+- ✅ Original image always visible for context
+- ✅ Smooth drawing experience
+- ✅ KISS principle: vanilla Canvas API, no heavy dependencies
+- ✅ Client-side only, zero server cost
+
+**Files Created:**
+- `components/MaskEditor.tsx` - Full canvas-based editor with drawing tools
+- Updated `components/MaskGenerator.tsx` - Integration and state management
+- Updated `README.md` - Documentation with examples and keyboard shortcuts
+
+**Key Learning:** For pixel-precise control, manual editing tools are essential. Canvas API provides everything needed without external dependencies.
 
 ---
 

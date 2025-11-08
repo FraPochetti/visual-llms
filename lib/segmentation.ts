@@ -86,14 +86,17 @@ export async function generateMaskForNovaCanvas(
     }
 
     const prediction = await createResponse.json();
+    console.log('Grounded SAM prediction created:', prediction.id, 'Status:', prediction.status);
 
-    // 2. Poll for completion (max 30 seconds)
+    // 2. Poll for completion (max 180 seconds to account for Replicate queue)
     let result = prediction;
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 180; // 3 minutes to handle busy Replicate servers
 
     while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+        
         const statusResponse = await fetch(
             `https://api.replicate.com/v1/predictions/${result.id}`,
             {
@@ -109,11 +112,23 @@ export async function generateMaskForNovaCanvas(
         }
 
         result = await statusResponse.json();
-        attempts++;
+        
+        // Log progress every 10 seconds
+        if (attempts % 10 === 0) {
+            console.log(`Grounded SAM polling attempt ${attempts}/180, status: ${result.status}`);
+        }
+        
+        // Special message if stuck in queue
+        if (attempts === 30 && result.status === 'starting') {
+            console.log('⚠️ Mask generation queued on Replicate. This may take 2-3 minutes during busy times...');
+        }
     }
+
+    console.log('Grounded SAM final status:', result.status, 'after', attempts, 'attempts');
 
     if (result.status === 'failed') {
         const errorMsg = result.error || 'Unknown error';
+        console.error('Grounded SAM failed:', errorMsg);
 
         // Check for common Grounded SAM errors
         if (errorMsg.includes('cannot reshape tensor of 0 elements')) {
@@ -124,7 +139,7 @@ export async function generateMaskForNovaCanvas(
     }
 
     if (attempts >= maxAttempts) {
-        throw new Error('Mask generation timed out after 30 seconds');
+        throw new Error(`Mask generation timed out after ${maxAttempts} seconds. The prediction may still be processing on Replicate. Status: ${result.status}`);
     }
 
     // 3. Download and invert mask for Nova Canvas

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,66 +8,59 @@ datasource db {
 }
 
 model Session {
-  id              String   @id @default(uuid())
-  cognitoUsername String?  @unique  // Link to Cognito user
-  createdAt       DateTime @default(now())
-  lastSeen        DateTime @updatedAt
-  
-  // Relations
-  mediaAssets MediaAsset[]
-  actions     Action[]
+  id              String       @id @default(uuid())
+  createdAt       DateTime     @default(now())
+  lastSeen        DateTime     @updatedAt
+  cognitoUsername String?      @unique
+  actions         Action[]
+  mediaAssets     MediaAsset[]
 
   @@map("sessions")
 }
 
 model MediaAsset {
   id        String   @id @default(uuid())
-  owner     String   // session ID
+  owner     String
   kind      String   @default("image")
   provider  String   @default("local-fs")
   path      String
   bytes     Int?
   width     Int?
   height    Int?
-  metadata  String?  // JSON string
-  saved     Boolean  @default(false) // Only show in gallery if true
+  metadata  String?
+  saved     Boolean  @default(false)
   createdAt DateTime @default(now())
-  
-  // Relations
-  session   Session  @relation(fields: [owner], references: [id])
   actions   Action[]
+  session   Session  @relation(fields: [owner], references: [id])
 
   @@map("media_assets")
 }
 
 model Action {
-  id        String   @id @default(uuid())
-  userId    String   // session ID
-  action    String   // 'create' | 'edit' | 'upload'
+  id        String      @id @default(uuid())
+  userId    String
+  action    String
   assetId   String?
-  detail    String?  // JSON string with additional info
-  createdAt DateTime @default(now())
-  
-  // Relations
-  session   Session     @relation(fields: [userId], references: [id])
+  detail    String?
+  createdAt DateTime    @default(now())
   asset     MediaAsset? @relation(fields: [assetId], references: [id])
+  session   Session     @relation(fields: [userId], references: [id])
 
   @@map("actions")
 }
 
 model Prediction {
   id           String   @id @default(uuid())
-  predictionId String   @unique  // Replicate prediction ID
-  owner        String              // Session ID
-  type         String              // 'image' | 'video'
-  status       String              // 'processing' | 'succeeded' | 'failed'
+  predictionId String   @unique
+  owner        String
+  type         String
+  status       String
   prompt       String
-  metadata     String?             // JSON: mode, frames, settings, etc
-  assetId      String?             // Links to MediaAsset when complete
-  error        String?             // Error message if failed
+  metadata     String?
+  assetId      String?
+  error        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@map("predictions")
 }
-

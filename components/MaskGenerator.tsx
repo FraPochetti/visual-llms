@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MaskEditor } from './MaskEditor';
 
 interface MaskGeneratorProps {
     imageUrl: string; // URL of the source image
@@ -14,6 +15,10 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
     const [isGenerating, setIsGenerating] = useState(false);
     const [maskPreview, setMaskPreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedMaskBase64, setEditedMaskBase64] = useState<string | null>(null);
+    const [originalMaskBase64, setOriginalMaskBase64] = useState<string | null>(null);
+    const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
 
     const handleGenerate = async () => {
         if (!prompt.trim()) {
@@ -24,6 +29,7 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
         setError(null);
         setIsGenerating(true);
         setMaskPreview(null);
+        setGenerationStartTime(Date.now());
 
         try {
             // Fetch the image and convert to File
@@ -62,6 +68,8 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
             // Set mask preview
             const maskDataUri = `data:image/png;base64,${result.maskBase64}`;
             setMaskPreview(maskDataUri);
+            setOriginalMaskBase64(result.maskBase64);
+            setEditedMaskBase64(null); // Reset edited mask when generating new one
 
             console.log('Mask generated successfully:', {
                 cost: result.cost,
@@ -77,16 +85,34 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
     };
 
     const handleUseMask = () => {
-        if (maskPreview) {
+        // Prefer edited mask if available, otherwise use original
+        const maskToUse = editedMaskBase64 ? `data:image/png;base64,${editedMaskBase64}` : maskPreview;
+        if (maskToUse) {
             // Extract base64 from data URI
-            const base64 = maskPreview.split(',')[1];
-            onMaskGenerated(base64, maskPreview);
+            const base64 = maskToUse.split(',')[1];
+            onMaskGenerated(base64, maskToUse);
         }
     };
 
     const handleRegenerate = () => {
         setMaskPreview(null);
         setError(null);
+        setEditedMaskBase64(null);
+        setOriginalMaskBase64(null);
+    };
+
+    const handleEditMask = () => {
+        setIsEditing(true);
+    };
+
+    const handleEditorApply = (base64: string, previewUrl: string) => {
+        setEditedMaskBase64(base64);
+        setMaskPreview(previewUrl);
+        setIsEditing(false);
+    };
+
+    const handleEditorCancel = () => {
+        setIsEditing(false);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -195,12 +221,21 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Generating mask...
+                                {generationStartTime && Date.now() - generationStartTime > 30000 
+                                    ? 'Queued on Replicate... (may take 2-3 min)'
+                                    : 'Generating mask...'}
                             </>
                         ) : (
                             'Generate Mask'
                         )}
                     </button>
+                    
+                    {/* Queue warning */}
+                    {isGenerating && (
+                        <p className="text-xs text-yellow-400 text-center mt-2">
+                            ⏱️ Grounded SAM may be queued during busy times. This can take up to 3 minutes.
+                        </p>
+                    )}
                 </div>
             ) : (
                 /* Mask Preview Actions */
@@ -210,12 +245,17 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
                         <p className="text-sm text-gray-400 mt-1">
                             Darkened areas (red tint removed) will be edited. Red-tinted areas will be preserved.
                         </p>
+                        {editedMaskBase64 && (
+                            <p className="text-sm text-yellow-400 mt-1">
+                                ✏️ Mask has been manually edited
+                            </p>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                         <button
                             onClick={handleRegenerate}
-                            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                            className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -223,8 +263,17 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
                             Regenerate
                         </button>
                         <button
+                            onClick={handleEditMask}
+                            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Edit Mask
+                        </button>
+                        <button
                             onClick={handleUseMask}
-                            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                            className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -243,6 +292,16 @@ export function MaskGenerator({ imageUrl, onMaskGenerated, onCancel }: MaskGener
                     will be used by Nova Canvas to edit only those regions.
                 </p>
             </div>
+
+            {/* Mask Editor Modal */}
+            {isEditing && originalMaskBase64 && (
+                <MaskEditor
+                    imageUrl={imageUrl}
+                    initialMaskBase64={originalMaskBase64}
+                    onApply={handleEditorApply}
+                    onCancel={handleEditorCancel}
+                />
+            )}
         </div>
     );
 }

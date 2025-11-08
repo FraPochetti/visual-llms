@@ -6,8 +6,11 @@ const AUTH_COOKIE_NAME = 'vn_auth_token';
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Allow access to login page and its assets
-    if (pathname === '/login' || pathname.startsWith('/_next') || pathname.startsWith('/api/auth')) {
+    // Allow access to login page, webhooks, and auth endpoints
+    if (pathname === '/login' || 
+        pathname.startsWith('/_next') || 
+        pathname.startsWith('/api/auth') ||
+        pathname.startsWith('/api/webhooks')) {
         return NextResponse.next();
     }
 

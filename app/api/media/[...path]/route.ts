@@ -3,6 +3,18 @@ import { getSessionId } from '@/lib/session';
 import { readMediaFile } from '@/lib/storage';
 import { prisma } from '@/lib/prisma';
 
+// CORS preflight handler
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+        },
+    });
+}
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ path: string[] }> }
@@ -46,6 +58,9 @@ export async function GET(
         const headers: Record<string, string> = {
             'Content-Type': contentType,
             'Cache-Control': 'public, max-age=31536000',
+            // CORS headers required for canvas operations
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': 'true',
         };
 
         // Add Accept-Ranges header for video streaming
